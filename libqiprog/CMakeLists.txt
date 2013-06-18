@@ -22,38 +22,11 @@
 ## THE SOFTWARE.
 ##
 
-cmake_minimum_required(VERSION 2.8)
+include_directories(include)
 
-project(qiprog)
-
-include(FindPkgConfig)
-
-add_subdirectory(libqiprog)
-#===============================================================================
-#= Dependencies
-#-------------------------------------------------------------------------------
-find_package(PkgConfig)
-pkg_check_modules(PKGDEPS REQUIRED libusb-1.0)
-
-include_directories(${PKGDEPS_INCLUDE_DIRS}
-	libqiprog/include
-)
-link_directories(${PKGDEPS_LIBRARY_DIRS})
-
-add_definitions(-Wall)
-
-#===============================================================================
-#= Sources and build
-#-------------------------------------------------------------------------------
-set(qiprog_SOURCES
-	src/qiprog.c
+set(LIBQIPROG_SRCS
+	src/libqiprog.c
 )
 
-add_executable(${PROJECT_NAME}
-	${qiprog_SOURCES}
-)
-
-target_link_libraries(${PROJECT_NAME}
-	${PKGDEPS_LIBRARIES}
-	libqiprog
-)
+add_library(libqiprog STATIC
+	${LIBQIPROG_SRCS})

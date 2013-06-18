@@ -42,12 +42,12 @@ add_definitions(-Wall)
 #===============================================================================
 #= Sources and build
 #-------------------------------------------------------------------------------
-set(usb_bulk_bench_SOURCES
+set(qiprog_SOURCES
 	src/qiprog.c
 )
 
 add_executable(${PROJECT_NAME}
-	${usb_bulk_bench_SOURCES}
+	${qiprog_SOURCES}
 )
 
 target_link_libraries(${PROJECT_NAME}

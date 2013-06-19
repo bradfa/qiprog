@@ -150,7 +150,7 @@ size_t qiprog_get_device_list(struct qiprog_context *ctx,
  */
 qiprog_err qiprog_open_device(struct qiprog_device *dev)
 {
-	/* FIXME: Check for NULL */
+	QIPROG_RETURN_ON_BAD_DEV(dev);
 	dev->drv->dev_open(dev);
 }
 
@@ -160,7 +160,7 @@ qiprog_err qiprog_open_device(struct qiprog_device *dev)
 qiprog_err qiprog_get_capabilities(struct qiprog_device *dev,
 				   struct qiprog_capabilities *caps)
 {
-	/* FIXME: Check for NULL */
+	QIPROG_RETURN_ON_BAD_DEV(dev);
 	dev->drv->get_capabilities(dev, caps);
 }
 

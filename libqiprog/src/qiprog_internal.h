@@ -25,6 +25,13 @@
 #ifndef QIPROG_INTERNAL_H
 #define QIPROG_INTERNAL_H
 
+#define QIPROG_RETURN_ON_BAD_DEV(dev) do {	\
+	if (dev == NULL)			\
+		return QIPROG_ERR_ARG;		\
+	if (dev->drv == NULL)			\
+		return QIPROG_ERR_ARG;		\
+	} while (0)
+
 /* FIXME: Hook this variable into the buildsystem */
 #define CONFIG_DRIVER_USB_MASTER	1
 

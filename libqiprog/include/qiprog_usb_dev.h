@@ -25,6 +25,6 @@
 #ifndef __QIPROG_USB_DEV_H
 #define __QIPROG_USB_DEV_H
 
-#include <qiprog.h>
+#include <qiprog_usb.h>
 
 #endif				/* __QIPROG_USB_DEV_H */

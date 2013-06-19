@@ -51,11 +51,30 @@ struct dev_list {
 	struct qiprog_device **devs;
 };
 
+/*
+ * TODO: Functions which take varargs are NOT IMPLEMENTED yet.
+ */
 struct qiprog_driver {
 	qiprog_err(*scan) (struct qiprog_context * ctx, struct dev_list * list);
 	qiprog_err(*dev_open) (struct qiprog_device * dev);
 	qiprog_err(*get_capabilities) (struct qiprog_device * dev,
 				       struct qiprog_capabilities * caps);
+	qiprog_err(*set_bus) (struct qiprog_device * dev, ...);
+	qiprog_err(*set_clock) (struct qiprog_device * dev, ...);
+	qiprog_err(*read_chip_id) (struct qiprog_device * dev, ...);
+	qiprog_err(*set_address) (struct qiprog_device * dev, ...);
+	qiprog_err(*set_erase_size) (struct qiprog_device * dev, ...);
+	qiprog_err(*set_erase_command) (struct qiprog_device * dev, ...);
+	qiprog_err(*set_write_command) (struct qiprog_device * dev, ...);
+	qiprog_err(*set_spi_timing) (struct qiprog_device * dev, ...);
+	qiprog_err(*read8) (struct qiprog_device * dev, ...);
+	qiprog_err(*read16) (struct qiprog_device * dev, ...);
+	qiprog_err(*read32) (struct qiprog_device * dev, ...);
+	qiprog_err(*write8) (struct qiprog_device * dev, ...);
+	qiprog_err(*write16) (struct qiprog_device * dev, ...);
+	qiprog_err(*write32) (struct qiprog_device * dev, ...);
+	qiprog_err(*set_vdd) (struct qiprog_device * dev, ...);
+
 };
 
 struct qiprog_device {

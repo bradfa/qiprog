@@ -27,6 +27,9 @@
 
 #include <qiprog.h>
 
+#define USB_VID_OPENMOKO		0x1d50
+#define USB_PID_OPENMOKO_VULTUREPROG	0x6076
+
 /**
  * @brief QiProg USB control request types for Control transfers
  *

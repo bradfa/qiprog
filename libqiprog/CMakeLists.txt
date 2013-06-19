@@ -22,10 +22,13 @@
 ## THE SOFTWARE.
 ##
 
-include_directories(include)
+include_directories(${PKGDEPS_INCLUDE_DIRS}
+	include)
 
 set(LIBQIPROG_SRCS
 	src/libqiprog.c
+	src/util.c
+	src/usb_master.c
 )
 
 add_library(libqiprog STATIC

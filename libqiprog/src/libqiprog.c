@@ -145,23 +145,4 @@ size_t qiprog_get_device_list(struct qiprog_context *ctx,
 	return qi_list.len;
 }
 
-/**
- * @brief
- */
-qiprog_err qiprog_open_device(struct qiprog_device *dev)
-{
-	QIPROG_RETURN_ON_BAD_DEV(dev);
-	dev->drv->dev_open(dev);
-}
-
-/**
- * @brief
- */
-qiprog_err qiprog_get_capabilities(struct qiprog_device *dev,
-				   struct qiprog_capabilities *caps)
-{
-	QIPROG_RETURN_ON_BAD_DEV(dev);
-	dev->drv->get_capabilities(dev, caps);
-}
-
 /** @} */

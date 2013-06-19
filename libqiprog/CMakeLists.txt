@@ -27,6 +27,7 @@ include_directories(${PKGDEPS_INCLUDE_DIRS}
 
 set(LIBQIPROG_SRCS
 	src/libqiprog.c
+	src/core.c
 	src/util.c
 	src/usb_master.c
 )

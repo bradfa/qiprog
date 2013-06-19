@@ -29,7 +29,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <getopt.h>
-#include <libusb.h>
+#include <qiprog.h>
 
 /* FIXME: move to QiProg API when appropriate */
 #define VULTUREPROG_USB_VID	0x1d50
@@ -143,72 +143,85 @@ int main(int argc, char *argv[])
 	return open_device(config);
 }
 
-static void fill_string(libusb_device_handle * dev, uint8_t idx,
-			unsigned char *str, int len)
+/*
+ * Print buses supported by the device.
+ */
+static void print_buses(uint32_t bus_master)
 {
-	int ret;
+	if (!bus_master)
+		printf("Device does not support any known bus\n");
 
-	/* Start with a null string if anything fails */
-	str[0] = '\0';
-	/* index 0 is not valid string index */
-	if (idx == 0)
-		return;
+	printf("Device supports");
+	if (bus_master & QIPROG_BUS_ISA)
+		printf(" ISA");
+	if (bus_master & QIPROG_BUS_LPC)
+		printf(" LPC");
+	if (bus_master & QIPROG_BUS_FWH)
+		printf(" FWH");
+	if (bus_master & QIPROG_BUS_SPI)
+		printf(" SPI");
+	if (bus_master & QIPROG_BUS_AUD)
+		printf(" AUD");
+	if (bus_master & QIPROG_BUS_BDM17)
+		printf(" BDM17");
+	if (bus_master & QIPROG_BUS_BDM35)
+		printf(" BDM35");
 
-	ret = libusb_get_string_descriptor_ascii(dev, idx, str, len);
-	if (ret < LIBUSB_SUCCESS)
-		printf("Error getting string descriptor: %s\n",
-		       libusb_error_name(ret));
+	printf("\n");
 }
 
-static int print_device_info(libusb_device_handle * handle)
+/*
+ * Query and print the capabilities of the device
+ */
+static int print_device_info(struct qiprog_device *dev)
 {
-	int ret;
-	unsigned char string[256];
-	struct libusb_device_descriptor dscr;
-	struct libusb_device *dev;
+	int i;
+	qiprog_err ret;
+	struct qiprog_capabilities caps;
 
-	dev = libusb_get_device(handle);
-
-	ret = libusb_get_device_descriptor(dev, &dscr);
-	if (ret != LIBUSB_SUCCESS) {
-		printf("Error getting device descriptor: %s\n",
-		       libusb_error_name(ret));
+	ret = qiprog_get_capabilities(dev, &caps);
+	if (ret != QIPROG_SUCCESS) {
+		printf("Error querying device capabilities\n");
 		return EXIT_FAILURE;
 	}
 
-	fill_string(handle, dscr.iManufacturer, string, sizeof(string));
-	printf("Manufacturer : %s\n", string);
-
-	fill_string(handle, dscr.iProduct, string, sizeof(string));
-	printf("Product      : %s\n", string);
-
-	fill_string(handle, dscr.iSerialNumber, string, sizeof(string));
-	printf("Serial Number: %s\n", string);
+	print_buses(caps.bus_master);
+	for (i = 0; i < 10; i++) {
+		if (caps.voltages[i] == 0)
+			break;
+		printf("Supported voltage: %imV\n", caps.voltages[i]);
+	}
+	/* Ignore caps.instruction_set and caps.max_direct_data */
 
 	return EXIT_SUCCESS;
 }
 
+/*
+ * Open the first QiProg device to come our way.
+ */
 int open_device(struct qiprog_cfg *conf)
 {
-	int ret;
-	libusb_context *ctx;
-	libusb_device_handle *handle;
+	size_t ndevs;
+	qiprog_err ret;
+	struct qiprog_context *ctx;
+	struct qiprog_device **devs;
 
-	if ((ret = libusb_init(&ctx)) != LIBUSB_SUCCESS) {
-		printf("Initialization error: %s\n", libusb_error_name(ret));
+	if ((ret = qiprog_init(&ctx)) != QIPROG_SUCCESS) {
+		printf("libqiprog initialization failure\n");
 		return EXIT_FAILURE;
 	}
 
-	handle = libusb_open_device_with_vid_pid(ctx, conf->vid, conf->pid);
-	if (handle == NULL) {
-		printf("Cannot open device.\n");
+	ndevs = qiprog_get_device_list(ctx, &devs);
+	if (!ndevs) {
+		printf("No device found\n");
 		return EXIT_FAILURE;
 	}
 
-	if ((ret = libusb_claim_interface(handle, 0)) != LIBUSB_SUCCESS) {
-		printf("Cannot claim device: %s\n", libusb_error_name(ret));
+	ret = qiprog_open_device(devs[0]);
+	if (ret != QIPROG_SUCCESS) {
+		printf("Error opening device\n");
 		return EXIT_FAILURE;
 	}
 
-	return print_device_info(handle);
+	return print_device_info(devs[0]);
 }

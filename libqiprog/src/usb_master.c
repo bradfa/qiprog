@@ -88,14 +88,6 @@ static struct qiprog_device *new_usb_prog(libusb_device * libusb_dev)
 }
 
 /**
- * @brief QiProg driver 'init' member
- */
-static qiprog_err init(struct qiprog_context *ctx)
-{
-	return QIPROG_SUCCESS;
-}
-
-/**
  * @brief Decide if given USB device is a QiProg device
  */
 static bool is_interesting(libusb_device * dev)
@@ -209,7 +201,6 @@ static qiprog_err get_capabilities(struct qiprog_device *dev,
  * @brief The actual USB host driver structure
  */
 struct qiprog_driver qiprog_usb_master_drv = {
-	.init = init,
 	.scan = scan,
 	.dev_open = dev_open,
 	.get_capabilities = get_capabilities,

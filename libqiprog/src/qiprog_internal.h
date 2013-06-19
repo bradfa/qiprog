@@ -52,7 +52,6 @@ struct dev_list {
 };
 
 struct qiprog_driver {
-	qiprog_err(*init) (struct qiprog_context * ctx);
 	qiprog_err(*scan) (struct qiprog_context * ctx, struct dev_list * list);
 	qiprog_err(*dev_open) (struct qiprog_device * dev);
 	qiprog_err(*get_capabilities) (struct qiprog_device * dev,

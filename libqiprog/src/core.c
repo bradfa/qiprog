@@ -36,7 +36,7 @@
 qiprog_err qiprog_open_device(struct qiprog_device *dev)
 {
 	QIPROG_RETURN_ON_BAD_DEV(dev);
-	dev->drv->dev_open(dev);
+	return dev->drv->dev_open(dev);
 }
 
 /**
@@ -46,7 +46,7 @@ qiprog_err qiprog_get_capabilities(struct qiprog_device *dev,
 				   struct qiprog_capabilities *caps)
 {
 	QIPROG_RETURN_ON_BAD_DEV(dev);
-	dev->drv->get_capabilities(dev, caps);
+	return dev->drv->get_capabilities(dev, caps);
 }
 
 /** @} */
@@ -69,7 +69,7 @@ qiprog_err qiprog_get_capabilities(struct qiprog_device *dev,
 qiprog_err qiprog_set_bus(struct qiprog_device * dev, enum qiprog_bus bus)
 {
 	QIPROG_RETURN_ON_BAD_DEV(dev);
-	dev->drv->set_bus(dev, bus);
+	return dev->drv->set_bus(dev, bus);
 }
 
 /** @} */

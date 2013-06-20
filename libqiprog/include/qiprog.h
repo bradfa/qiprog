@@ -103,6 +103,7 @@ size_t qiprog_get_device_list(struct qiprog_context *ctx,
 qiprog_err qiprog_open_device(struct qiprog_device *dev);
 qiprog_err qiprog_get_capabilities(struct qiprog_device *dev,
 				   struct qiprog_capabilities *caps);
+qiprog_err qiprog_set_bus(struct qiprog_device * dev, enum qiprog_bus bus);
 
 QIPROG_END_DECLS
 #endif				/* __QIPROG_H */

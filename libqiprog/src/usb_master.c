@@ -197,12 +197,46 @@ static qiprog_err get_capabilities(struct qiprog_device *dev,
 	return QIPROG_SUCCESS;
 }
 
+static qiprog_err set_bus(struct qiprog_device * dev, enum qiprog_bus bus)
+{
+	int ret;
+	uint16_t wValue, wIndex;
+	struct usb_master_priv *priv;
+
+	if (!dev)
+		return QIPROG_ERR_ARG;
+	if (!(priv = dev->priv))
+		return QIPROG_ERR_ARG;
+	if (!bus)
+		return QIPROG_ERR_ARG;
+
+	/* Most significant 16 bits of the QIPROG_BUS_ constant */
+	wValue = bus >> 16;
+	/* Least significant 16 bits of the QIPROG_BUS_ constant */
+	wIndex = bus & 0xffff;
+
+	/*
+	 * FIXME: This doesn't seem to return an error when the device NAKs the
+	 * request.
+	 */
+	ret = libusb_control_transfer(priv->handle, 0x40,
+				      QIPROG_SET_BUS, wValue, wIndex,
+				      NULL, 0, 3000);
+	if (ret < LIBUSB_SUCCESS) {
+		/* FIXME: print message */
+		return QIPROG_ERR;
+	}
+
+	return QIPROG_SUCCESS;
+}
+
 /**
  * @brief The actual USB host driver structure
  */
 struct qiprog_driver qiprog_usb_master_drv = {
 	.scan = scan,
 	.dev_open = dev_open,
+	.set_bus = set_bus,
 	.get_capabilities = get_capabilities,
 };
 

@@ -59,7 +59,7 @@ struct qiprog_driver {
 	qiprog_err(*dev_open) (struct qiprog_device * dev);
 	qiprog_err(*get_capabilities) (struct qiprog_device * dev,
 				       struct qiprog_capabilities * caps);
-	qiprog_err(*set_bus) (struct qiprog_device * dev, ...);
+	qiprog_err(*set_bus) (struct qiprog_device * dev, enum qiprog_bus bus);
 	qiprog_err(*set_clock) (struct qiprog_device * dev, ...);
 	qiprog_err(*read_chip_id) (struct qiprog_device * dev, ...);
 	qiprog_err(*set_address) (struct qiprog_device * dev, ...);

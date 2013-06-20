@@ -50,3 +50,26 @@ qiprog_err qiprog_get_capabilities(struct qiprog_device *dev,
 }
 
 /** @} */
+
+/**
+ * @defgroup commands QiProg device commands
+ *
+ * @ingroup qiprog_api
+ *
+ * @author @htmlonly &copy; @endhtmlonly 2013 Alexandru Gagniuc <mr.nuke.me@gmail.com>
+ *
+ * @brief <b>QiProg device commands API</b>
+ *
+ */
+/** @{ */
+
+/**
+ * @brief
+ */
+qiprog_err qiprog_set_bus(struct qiprog_device * dev, enum qiprog_bus bus)
+{
+	QIPROG_RETURN_ON_BAD_DEV(dev);
+	dev->drv->set_bus(dev, bus);
+}
+
+/** @} */

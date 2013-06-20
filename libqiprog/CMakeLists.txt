@@ -25,6 +25,9 @@
 include_directories(${PKGDEPS_INCLUDE_DIRS}
 	include)
 
+# FIXME: This should be configurable as an option, not hardcoded
+add_definitions(-DCONFIG_DRIVER_USB_MASTER=1)
+
 set(LIBQIPROG_SRCS
 	src/libqiprog.c
 	src/core.c

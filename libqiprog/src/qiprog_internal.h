@@ -25,6 +25,8 @@
 #ifndef QIPROG_INTERNAL_H
 #define QIPROG_INTERNAL_H
 
+#include <qiprog.h>
+
 #define QIPROG_RETURN_ON_BAD_DEV(dev) do {	\
 	if (dev == NULL)			\
 		return QIPROG_ERR_ARG;		\
@@ -32,15 +34,12 @@
 		return QIPROG_ERR_ARG;		\
 	} while (0)
 
-/* FIXME: Hook this variable into the buildsystem */
-#define CONFIG_DRIVER_USB_MASTER	1
-
-#if CONFIG_DRIVER_USB_MASTER
+#if defined(CONFIG_DRIVER_USB_MASTER) && (CONFIG_DRIVER_USB_MASTER)
 #include <qiprog_usb_host.h>
 #endif
 
 struct qiprog_context {
-#if CONFIG_DRIVER_USB_MASTER
+#if defined(CONFIG_DRIVER_USB_MASTER) && (CONFIG_DRIVER_USB_MASTER)
 	struct libusb_context *libusb_host_ctx;
 #endif
 };

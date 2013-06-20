@@ -148,8 +148,10 @@ int main(int argc, char *argv[])
  */
 static void print_buses(uint32_t bus_master)
 {
-	if (!bus_master)
+	if (!bus_master) {
 		printf("Device does not support any known bus\n");
+		return;
+	}
 
 	printf("Device supports");
 	if (bus_master & QIPROG_BUS_ISA)
@@ -197,6 +199,22 @@ static int print_device_info(struct qiprog_device *dev)
 }
 
 /*
+ * Call different functions on the device and see if they fail or not
+ */
+static int stress_test_device(struct qiprog_device *dev)
+{
+	qiprog_err ret;
+
+	ret = qiprog_set_bus(dev, QIPROG_BUS_LPC);
+	if (ret != QIPROG_SUCCESS) {
+		printf("Error setting device to LPC bus\n");
+		return EXIT_FAILURE;
+	}
+
+	return EXIT_SUCCESS;
+}
+
+/*
  * Open the first QiProg device to come our way.
  */
 int open_device(struct qiprog_cfg *conf)
@@ -223,5 +241,11 @@ int open_device(struct qiprog_cfg *conf)
 		return EXIT_FAILURE;
 	}
 
-	return print_device_info(devs[0]);
+	if (print_device_info(devs[0]) != EXIT_SUCCESS)
+		return EXIT_FAILURE;
+
+	if (stress_test_device(devs[0]) != EXIT_SUCCESS)
+		return EXIT_FAILURE;
+
+	return EXIT_SUCCESS;
 }

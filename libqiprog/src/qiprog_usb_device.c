@@ -116,6 +116,7 @@ void qiprog_change_device(struct qiprog_device *new_dev)
 	/* Initialize the new driver */
 	qi_dev->drv->dev_open(qi_dev);
 }
+static uint8_t ctrl_buf[64];
 
 qiprog_err qiprog_handle_control_request(uint8_t bRequest, uint8_t wValue,
 					 uint16_t wIndex, uint16_t wLength,
@@ -128,10 +129,10 @@ qiprog_err qiprog_handle_control_request(uint8_t bRequest, uint8_t wValue,
 
 	switch (bRequest) {
 	case QIPROG_GET_CAPABILITIES: {
-		struct qiprog_capabilities caps;
-		ret = qiprog_get_capabilities(qi_dev, &caps);
-		*data = (void *)&caps;
-		*len = sizeof(caps);
+		struct qiprog_capabilities *caps = (void*) ctrl_buf;
+		ret = qiprog_get_capabilities(qi_dev, caps);
+		*data = (void *)caps;
+		*len = sizeof(*caps);
 		ret = QIPROG_SUCCESS;
 		break;
 	}

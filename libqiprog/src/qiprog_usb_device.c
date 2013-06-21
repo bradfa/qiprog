@@ -136,15 +136,22 @@ qiprog_err qiprog_handle_control_request(uint8_t bRequest, uint8_t wValue,
 		ret = QIPROG_SUCCESS;
 		break;
 	}
-	case QIPROG_SET_BUS:
-		/* Not Handled */
+	case QIPROG_SET_BUS: {
+		uint32_t bus;
+		bus = (wValue << 16) | wIndex;
+		ret = qiprog_set_bus(qi_dev, bus);
 		break;
+	}
 	case QIPROG_SET_CLOCK:
 		/* Not Handled */
 		break;
-	case QIPROG_READ_DEVICE_ID:
-		/* Not Handled */
+	case QIPROG_READ_DEVICE_ID: {
+		struct qiprog_chip_id *ids = (void*) ctrl_buf;
+		ret = qiprog_read_chip_id(qi_dev, ids);
+		*data = ids;
+		*len = sizeof(*ids) * 9;
 		break;
+	}
 	case QIPROG_SET_ADDRESS:
 		/* Not Handled */
 		break;

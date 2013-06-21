@@ -89,18 +89,18 @@ struct qiprog_capabilities {
 	uint32_t bus_master;
 	uint32_t max_direct_data;
 	uint16_t voltages[10];
-};
+} __attribute__ ((packed));
 
 struct qiprog_chip_id {
 	uint8_t id_method;
 	uint16_t vendor_id;
 	uint32_t device_id;
-};
+} __attribute__ ((packed));
 
 struct qiprog_address {
 	uint32_t start_address;
 	uint32_t max_address;
-};
+} __attribute__ ((packed));
 
 struct qiprog_context;
 struct qiprog_device;

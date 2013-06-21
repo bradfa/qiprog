@@ -259,6 +259,196 @@ static qiprog_err read_chip_id(struct qiprog_device *dev,
 	return QIPROG_SUCCESS;
 }
 
+/**
+ * @brief QiProg driver 'read8' member
+ *
+ * TODO: Try to unify read 8/16/32 into one common function
+ * TODO: For 16/32 reads, consider byte order. The USB bus is LE.
+ */
+static qiprog_err read8(struct qiprog_device *dev, uint32_t addr,
+			uint8_t * data)
+{
+	int ret;
+	uint16_t wValue, wIndex;
+	struct usb_master_priv *priv;
+
+	if (!dev)
+		return QIPROG_ERR_ARG;
+	if (!(priv = dev->priv))
+		return QIPROG_ERR_ARG;
+
+	/* Most significant 16 bits of the memory address to read from */
+	wValue = addr >> 16;
+	/* Least significant 16 bits of the memory address to read from */
+	wIndex = addr & 0xffff;
+
+	ret = libusb_control_transfer(priv->handle, 0xc0,
+				      QIPROG_READ8, wValue, wIndex,
+				      (void *)data, sizeof(*data), 3000);
+	if (ret < LIBUSB_SUCCESS) {
+		/* FIXME: print message */
+		return QIPROG_ERR;
+	}
+
+	return QIPROG_SUCCESS;
+}
+
+/**
+ * @brief QiProg driver 'read16' member
+ */
+static qiprog_err read16(struct qiprog_device *dev, uint32_t addr,
+			 uint16_t * data)
+{
+	int ret;
+	uint16_t wValue, wIndex;
+	struct usb_master_priv *priv;
+
+	if (!dev)
+		return QIPROG_ERR_ARG;
+	if (!(priv = dev->priv))
+		return QIPROG_ERR_ARG;
+
+	/* Most significant 16 bits of the memory address to read from */
+	wValue = addr >> 16;
+	/* Least significant 16 bits of the memory address to read from */
+	wIndex = addr & 0xffff;
+
+	ret = libusb_control_transfer(priv->handle, 0xc0,
+				      QIPROG_READ16, wValue, wIndex,
+				      (void *)data, sizeof(*data), 3000);
+	if (ret < LIBUSB_SUCCESS) {
+		/* FIXME: print message */
+		return QIPROG_ERR;
+	}
+
+	return QIPROG_SUCCESS;
+}
+
+/**
+ * @brief QiProg driver 'read32' member
+ */
+static qiprog_err read32(struct qiprog_device *dev, uint32_t addr,
+			 uint32_t * data)
+{
+	int ret;
+	uint16_t wValue, wIndex;
+	struct usb_master_priv *priv;
+
+	if (!dev)
+		return QIPROG_ERR_ARG;
+	if (!(priv = dev->priv))
+		return QIPROG_ERR_ARG;
+
+	/* Most significant 16 bits of the memory address to read from */
+	wValue = addr >> 16;
+	/* Least significant 16 bits of the memory address to read from */
+	wIndex = addr & 0xffff;
+
+	ret = libusb_control_transfer(priv->handle, 0xc0,
+				      QIPROG_READ32, wValue, wIndex,
+				      (void *)data, sizeof(*data), 3000);
+	if (ret < LIBUSB_SUCCESS) {
+		/* FIXME: print message */
+		return QIPROG_ERR;
+	}
+
+	return QIPROG_SUCCESS;
+}
+
+/**
+ * @brief QiProg driver 'write8' member
+ *
+ * TODO: Try to unify write 8/16/32 into one common function
+ * TODO: For 16/32 writes, consider byte order. The USB bus is LE.
+ */
+static qiprog_err write8(struct qiprog_device *dev, uint32_t addr, uint8_t data)
+{
+	int ret;
+	uint16_t wValue, wIndex;
+	struct usb_master_priv *priv;
+
+	if (!dev)
+		return QIPROG_ERR_ARG;
+	if (!(priv = dev->priv))
+		return QIPROG_ERR_ARG;
+
+	/* Most significant 16 bits of the memory address to read from */
+	wValue = addr >> 16;
+	/* Least significant 16 bits of the memory address to read from */
+	wIndex = addr & 0xffff;
+
+	ret = libusb_control_transfer(priv->handle, 0x40,
+				      QIPROG_WRITE8, wValue, wIndex,
+				      (void*) &data, sizeof(data), 3000);
+	if (ret < LIBUSB_SUCCESS) {
+		/* FIXME: print message */
+		return QIPROG_ERR;
+	}
+
+	return QIPROG_SUCCESS;
+}
+
+/**
+ * @brief QiProg driver 'write16' member
+ */
+static qiprog_err write16(struct qiprog_device *dev, uint32_t addr,
+			  uint16_t data)
+{
+	int ret;
+	uint16_t wValue, wIndex;
+	struct usb_master_priv *priv;
+
+	if (!dev)
+		return QIPROG_ERR_ARG;
+	if (!(priv = dev->priv))
+		return QIPROG_ERR_ARG;
+
+	/* Most significant 16 bits of the memory address to read from */
+	wValue = addr >> 16;
+	/* Least significant 16 bits of the memory address to read from */
+	wIndex = addr & 0xffff;
+
+	ret = libusb_control_transfer(priv->handle, 0x40,
+				      QIPROG_WRITE16, wValue, wIndex,
+				      (void*) &data, sizeof(data), 3000);
+	if (ret < LIBUSB_SUCCESS) {
+		/* FIXME: print message */
+		return QIPROG_ERR;
+	}
+
+	return QIPROG_SUCCESS;
+}
+
+/**
+ * @brief QiProg driver 'write32' member
+ */
+static qiprog_err write32(struct qiprog_device *dev, uint32_t addr,
+			  uint32_t data)
+{
+	int ret;
+	uint16_t wValue, wIndex;
+	struct usb_master_priv *priv;
+
+	if (!dev)
+		return QIPROG_ERR_ARG;
+	if (!(priv = dev->priv))
+		return QIPROG_ERR_ARG;
+
+	/* Most significant 16 bits of the memory address to read from */
+	wValue = addr >> 16;
+	/* Least significant 16 bits of the memory address to read from */
+	wIndex = addr & 0xffff;
+
+	ret = libusb_control_transfer(priv->handle, 0x40,
+				      QIPROG_WRITE32, wValue, wIndex,
+				      (void*) &data, sizeof(data), 3000);
+	if (ret < LIBUSB_SUCCESS) {
+		/* FIXME: print message */
+		return QIPROG_ERR;
+	}
+
+	return QIPROG_SUCCESS;
+}
 
 /**
  * @brief The actual USB host driver structure
@@ -269,6 +459,12 @@ struct qiprog_driver qiprog_usb_master_drv = {
 	.set_bus = set_bus,
 	.get_capabilities = get_capabilities,
 	.read_chip_id = read_chip_id,
+	.read8 = read8,
+	.read16 = read16,
+	.read32 = read32,
+	.write8 = write8,
+	.write16 = write16,
+	.write32 = write32,
 };
 
 /** @} */

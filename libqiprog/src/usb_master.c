@@ -231,6 +231,36 @@ static qiprog_err set_bus(struct qiprog_device * dev, enum qiprog_bus bus)
 }
 
 /**
+ * @brief QiProg driver 'read_chip_id' member
+ *
+ * TODO: Data comes in little endian format, however we don't bother with byte
+ * order. Works fine on x86 and LE systems only.
+ */
+static qiprog_err read_chip_id(struct qiprog_device *dev,
+			       struct qiprog_chip_id ids[9])
+{
+	int ret;
+	uint16_t wValue, wIndex;
+	struct usb_master_priv *priv;
+
+	if (!dev)
+		return QIPROG_ERR_ARG;
+	if (!(priv = dev->priv))
+		return QIPROG_ERR_ARG;
+
+	ret = libusb_control_transfer(priv->handle, 0xc0,
+				      QIPROG_READ_DEVICE_ID, 0, 0,
+				      (void *)ids, sizeof(*ids) * 9, 3000);
+	if (ret < LIBUSB_SUCCESS) {
+		/* FIXME: print message */
+		return QIPROG_ERR;
+	}
+
+	return QIPROG_SUCCESS;
+}
+
+
+/**
  * @brief The actual USB host driver structure
  */
 struct qiprog_driver qiprog_usb_master_drv = {
@@ -238,6 +268,7 @@ struct qiprog_driver qiprog_usb_master_drv = {
 	.dev_open = dev_open,
 	.set_bus = set_bus,
 	.get_capabilities = get_capabilities,
+	.read_chip_id = read_chip_id,
 };
 
 /** @} */

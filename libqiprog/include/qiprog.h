@@ -91,19 +91,51 @@ struct qiprog_capabilities {
 	uint16_t voltages[10];
 };
 
+struct qiprog_chip_id {
+	uint8_t id_method;
+	uint16_t vendor_id;
+	uint32_t device_id;
+};
+
+struct qiprog_address {
+	uint32_t start_address;
+	uint32_t max_address;
+};
+
 struct qiprog_context;
 struct qiprog_device;
 
-QIPROG_BEGIN_DECLS
-
-qiprog_err qiprog_init(struct qiprog_context **ctx);
+QIPROG_BEGIN_DECLS qiprog_err qiprog_init(struct qiprog_context **ctx);
 qiprog_err qiprog_exit(struct qiprog_context *ctx);
 size_t qiprog_get_device_list(struct qiprog_context *ctx,
 			      struct qiprog_device ***list);
 qiprog_err qiprog_open_device(struct qiprog_device *dev);
 qiprog_err qiprog_get_capabilities(struct qiprog_device *dev,
 				   struct qiprog_capabilities *caps);
-qiprog_err qiprog_set_bus(struct qiprog_device * dev, enum qiprog_bus bus);
+qiprog_err qiprog_set_bus(struct qiprog_device *dev, enum qiprog_bus bus);
+qiprog_err qiprog_set_clock(struct qiprog_device *dev, uint32_t * clock_khz);
+qiprog_err qiprog_read_chip_id(struct qiprog_device *dev,
+			       struct qiprog_chip_id ids[9]);
+qiprog_err qiprog_set_address(struct qiprog_device *dev, uint32_t start,
+			      uint32_t end);
+/* TODO: qiprog_set_erase_size */
+/* TODO: qiprog_set_erase_command */
+/* TODO: qiprog_set_write_command */
+qiprog_err qiprog_set_spi_timing(struct qiprog_device *dev,
+				 uint16_t tpu_read_us, uint32_t tces_ns);
+qiprog_err qiprog_read8(struct qiprog_device *dev, uint32_t addr,
+			uint8_t * data);
+qiprog_err qiprog_read16(struct qiprog_device *dev, uint32_t addr,
+			 uint16_t * data);
+qiprog_err qiprog_read32(struct qiprog_device *dev, uint32_t addr,
+			 uint32_t * data);
+qiprog_err qiprog_write8(struct qiprog_device *dev, uint32_t addr,
+			 uint8_t data);
+qiprog_err qiprog_write16(struct qiprog_device *dev, uint32_t addr,
+			  uint16_t data);
+qiprog_err qiprog_write32(struct qiprog_device *dev, uint32_t addr,
+			  uint32_t data);
+qiprog_err qiprog_set_vdd(struct qiprog_device *dev, uint16_t vdd_mv);
 
 QIPROG_END_DECLS
 #endif				/* __QIPROG_H */

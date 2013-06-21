@@ -60,21 +60,30 @@ struct qiprog_driver {
 	qiprog_err(*get_capabilities) (struct qiprog_device * dev,
 				       struct qiprog_capabilities * caps);
 	qiprog_err(*set_bus) (struct qiprog_device * dev, enum qiprog_bus bus);
-	qiprog_err(*set_clock) (struct qiprog_device * dev, ...);
-	qiprog_err(*read_chip_id) (struct qiprog_device * dev, ...);
-	qiprog_err(*set_address) (struct qiprog_device * dev, ...);
+	qiprog_err(*set_clock) (struct qiprog_device * dev,
+				uint32_t * clock_khz);
+	qiprog_err(*read_chip_id) (struct qiprog_device * dev,
+				   struct qiprog_chip_id ids[9]);
+	qiprog_err(*set_address) (struct qiprog_device * dev, uint32_t start,
+				  uint32_t end);
 	qiprog_err(*set_erase_size) (struct qiprog_device * dev, ...);
 	qiprog_err(*set_erase_command) (struct qiprog_device * dev, ...);
 	qiprog_err(*set_write_command) (struct qiprog_device * dev, ...);
-	qiprog_err(*set_spi_timing) (struct qiprog_device * dev, ...);
-	qiprog_err(*read8) (struct qiprog_device * dev, ...);
-	qiprog_err(*read16) (struct qiprog_device * dev, ...);
-	qiprog_err(*read32) (struct qiprog_device * dev, ...);
-	qiprog_err(*write8) (struct qiprog_device * dev, ...);
-	qiprog_err(*write16) (struct qiprog_device * dev, ...);
-	qiprog_err(*write32) (struct qiprog_device * dev, ...);
-	qiprog_err(*set_vdd) (struct qiprog_device * dev, ...);
-
+	qiprog_err(*set_spi_timing) (struct qiprog_device * dev,
+				     uint16_t tpu_read_us, uint32_t tces_ns);
+	qiprog_err(*read8) (struct qiprog_device * dev, uint32_t addr,
+			    uint8_t * data);
+	qiprog_err(*read16) (struct qiprog_device * dev, uint32_t addr,
+			     uint16_t * data);
+	qiprog_err(*read32) (struct qiprog_device * dev, uint32_t addr,
+			     uint32_t * data);
+	qiprog_err(*write8) (struct qiprog_device * dev, uint32_t addr,
+			     uint8_t data);
+	qiprog_err(*write16) (struct qiprog_device * dev, uint32_t addr,
+			      uint16_t data);
+	qiprog_err(*write32) (struct qiprog_device * dev, uint32_t addr,
+			      uint32_t data);
+	qiprog_err(*set_vdd) (struct qiprog_device * dev, uint16_t vdd_mv);
 };
 
 struct qiprog_device {

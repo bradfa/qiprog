@@ -167,24 +167,45 @@ qiprog_err qiprog_handle_control_request(uint8_t bRequest, uint8_t wValue,
 	case QIPROG_SET_SPI_TIMING:
 		/* Not Handled */
 		break;
-	case QIPROG_READ8:
-		/* Not Handled */
+	case QIPROG_READ8: {
+		uint32_t addr = (wValue << 16) | wIndex;
+		ret = qiprog_read8(qi_dev, addr, (void*)ctrl_buf);
+		*data = ctrl_buf;
+		*len = sizeof(uint8_t);
 		break;
-	case QIPROG_READ16:
-		/* Not Handled */
+	}
+	case QIPROG_READ16: {
+		uint32_t addr = (wValue << 16) | wIndex;
+		ret = qiprog_read16(qi_dev, addr, (void*)ctrl_buf);
+		*data = ctrl_buf;
+		*len = sizeof(uint16_t);
 		break;
-	case QIPROG_READ32:
-		/* Not Handled */
+	}
+	case QIPROG_READ32: {
+		uint32_t addr = (wValue << 16) | wIndex;
+		ret = qiprog_read32(qi_dev, addr, (void*)ctrl_buf);
+		*data = ctrl_buf;
+		*len = sizeof(uint32_t);
 		break;
-	case QIPROG_WRITE8:
-		/* Not Handled */
+	}
+	case QIPROG_WRITE8: {
+		uint32_t addr = (wValue << 16) | wIndex;
+		uint8_t *reg8 = (void*)(*data);
+		ret = qiprog_write8(qi_dev, addr, *reg8);
 		break;
-	case QIPROG_WRITE16:
-		/* Not Handled */
+	}
+	case QIPROG_WRITE16: {
+		uint32_t addr = (wValue << 16) | wIndex;
+		uint16_t *reg16 = (void*)(*data);
+		ret = qiprog_write16(qi_dev, addr, *reg16);
 		break;
-	case QIPROG_WRITE32:
-		/* Not Handled */
+	}
+	case QIPROG_WRITE32: {
+		uint32_t addr = (wValue << 16) | wIndex;
+		uint32_t *reg32 = (void*)(*data);
+		ret = qiprog_write32(qi_dev, addr, *reg32);
 		break;
+	}
 	case QIPROG_SET_VDD:
 		/* Not Handled */
 		break;

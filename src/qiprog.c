@@ -269,13 +269,13 @@ static int stress_test_device(struct qiprog_device *dev)
 	printf("write8 worked\n");
 	ret = qiprog_write16(dev, 0xfffffff0, 0xd0b1);
 	if (ret != QIPROG_SUCCESS) {
-		printf("write8 failure\n");
+		printf("write16 failure\n");
 		return EXIT_FAILURE;
 	}
 	printf("write16 worked\n");
 	ret = qiprog_write32(dev, 0xfffffff0, 0x00c0ffee);
 	if (ret != QIPROG_SUCCESS) {
-		printf("write8 failure\n");
+		printf("write32 failure\n");
 		return EXIT_FAILURE;
 	}
 	printf("write32 worked\n");

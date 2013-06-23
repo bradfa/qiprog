@@ -30,7 +30,7 @@
 
 void qiprog_change_device(struct qiprog_device *new_dev);
 
-qiprog_err qiprog_handle_control_request(uint8_t bRequest, uint8_t wValue,
+qiprog_err qiprog_handle_control_request(uint8_t bRequest, uint16_t wValue,
 					 uint16_t wIndex, uint16_t wLength,
 					 uint8_t ** data, uint16_t * len);
 

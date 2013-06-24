@@ -95,7 +95,20 @@ void dev_list_append(struct dev_list *list, struct qiprog_device *dev)
  */
 struct qiprog_device *qiprog_new_device(void)
 {
-	return malloc(sizeof(struct qiprog_device));
+	struct qiprog_device *dev;
+
+	if ((dev = malloc(sizeof(*dev))) == NULL) {
+		/* FIXME: print error */
+		return NULL;
+	}
+
+	/*
+	 * Although we shouldn't depend on all fields being NULL, it is still
+	 * preferable to initialize all fields to 0.
+	 */
+	memset(dev, 0, sizeof(*dev));
+
+	return dev;
 }
 
 /**

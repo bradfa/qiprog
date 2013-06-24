@@ -133,7 +133,6 @@ qiprog_err qiprog_handle_control_request(uint8_t bRequest, uint8_t wValue,
 		ret = qiprog_get_capabilities(qi_dev, caps);
 		*data = (void *)caps;
 		*len = sizeof(*caps);
-		ret = QIPROG_SUCCESS;
 		break;
 	}
 	case QIPROG_SET_BUS: {

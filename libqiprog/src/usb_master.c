@@ -140,7 +140,7 @@ qiprog_err scan(struct qiprog_context * ctx, struct dev_list * qi_list)
 		}
 	}
 
-	libusb_free_device_list(list, 1);
+	libusb_free_device_list(list, 0);
 	return QIPROG_SUCCESS;
 }
 

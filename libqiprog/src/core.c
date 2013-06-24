@@ -97,6 +97,12 @@ qiprog_err qiprog_set_address(struct qiprog_device * dev, uint32_t start,
 			      uint32_t end)
 {
 	QIPROG_RETURN_ON_BAD_DEV(dev);
+
+	/*
+	 * Don't set dev->curr_addr_range here. Let the device driver decide if
+	 * it should update it or not.
+	 */
+
 	return dev->drv->set_address(dev, start, end);
 }
 

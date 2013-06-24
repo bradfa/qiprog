@@ -94,6 +94,8 @@ struct qiprog_device {
 	/* Serial Number of device, if available */
 	const char *serial;
 
+	/* Internal address range - Used with set_address() and readn() */
+	struct qiprog_address curr_addr_range;
 	/* Underlying driver */
 	struct qiprog_driver *drv;
 	/* Per-device, specific context */

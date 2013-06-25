@@ -167,8 +167,8 @@ write.
 >*  bmRequestType=0xc0 (IN)
 >*  wValue=most significant 16 bits of the memory address to read from
 >*  wIndex=least significant 16 bits of the memory address to read from
->*  wLength=number of uint8_t to read from given memory address (0 < n <= 64)
->*  data=memory contents at given address (may be fewer uint8_t than requested)
+>*  wLength=1
+>*  data=memory contents at given address
 
 ##### qiprog_read16 #####
 
@@ -176,8 +176,8 @@ write.
 >*  bmRequestType=0xc0 (IN)
 >*  wValue=most significant 16 bits of the memory address to read from
 >*  wIndex=least significant 16 bits of the memory address to read from
->*  wLength=number of uint16_t to read from given memory address (0 < n <= 32)
->*  data=memory contents at given address (may be fewer uint16_t than requested)
+>*  wLength=2
+>*  data=memory contents (2-bytes) at given address
 
 ##### qiprog_read32 #####
 
@@ -185,8 +185,8 @@ write.
 >*  bmRequestType=0xc0 (IN)
 >*  wValue=most significant 16 bits of the memory address to read from
 >*  wIndex=least significant 16 bits of the memory address to read from
->*  wLength=number of uint32_t to read from given memory address (0 < n <= 16)
->*  data=memory contents at given address (may be fewer uint16_t than requested)
+>*  wLength=4
+>*  data=memory contents (4-bytes) at given address
 
 ##### qiprog_write8 #####
 
@@ -194,7 +194,7 @@ write.
 >*  bmRequestType=0x40 (OUT)
 >*  wValue=most significant 16 bits of the memory address to write to
 >*  wIndex=least significant 16 bits of the memory address to write to
->*  wLength=number of uint8_t to read from given memory address (0 < n <= 64)
+>*  wLength=1
 >*  data=new memory contents to write
 
 ##### qiprog_write16 #####
@@ -203,8 +203,8 @@ write.
 >*  bmRequestType=0x40 (OUT)
 >*  wValue=most significant 16 bits of the memory address to write to
 >*  wIndex=least significant 16 bits of the memory address to write to
->*  wLength=number of uint16_t to read from given memory address (0 < n <= 32)
->*  data=new memory contents to write
+>*  wLength=2
+>*  data=new memory contents (2 bytes) to write
 
 ##### qiprog_write32 #####
 
@@ -212,8 +212,8 @@ write.
 >*  bmRequestType=0x40 (OUT)
 >*  wValue=most significant 16 bits of the memory address to write to
 >*  wIndex=least significant 16 bits of the memory address to write to
->*  wLength=number of uint32_t to read from given memory address (0 < n <= 16)
->*  data=new memory contents to write
+>*  wLength=4
+>*  data=new memory contents (4-bytes) to write
 
 ##### qiprog_set_voltage #####
 

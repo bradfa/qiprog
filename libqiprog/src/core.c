@@ -53,7 +53,7 @@ qiprog_err qiprog_get_capabilities(struct qiprog_device * dev,
 /**
  * @defgroup commands QiProg device commands
  *
- * @ingroup qiprog_api
+ * @ingroup qiprog_public
  *
  * @author @htmlonly &copy; @endhtmlonly 2013 Alexandru Gagniuc <mr.nuke.me@gmail.com>
  *

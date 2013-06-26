@@ -107,6 +107,8 @@ struct qiprog_device {
  *
  * @ingroup qiprog_private
  *
+ * @brief <b>Byte order may matter</b>
+ *
  * Since QiProg drivers need to communicate with the outside world, the byte
  * ordering of "outside world" devices needs to be accounted for. In QiProg
  * terms, outside data is a stream of bytes, whereas internal data is organized

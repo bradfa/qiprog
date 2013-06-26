@@ -51,8 +51,15 @@
  */
 
 /**
+ * These are the "top" groups of the documentation. These will appear on the
+ * "Modules"page in the generated docs. All groups should be part of one of
+ * these groups.
+ *
  * @defgroup qiprog_public Public QiProg API
  * @defgroup qiprog_private Private QiProg drivers and utilities
+ *
+ * @defgroup qiprog_drivers Drivers for different QiProg hardware
+ * @ingroup qiprog_private
  */
 
 /* FIXME: Kill this idiotic include */
@@ -73,7 +80,7 @@ static const struct qiprog_driver *driver_list[] = {
 /**
  * @defgroup initialization QiProg initialization/deinitialization
  *
- * @ingroup qiprog_api
+ * @ingroup qiprog_public
  *
  * @author @htmlonly &copy; @endhtmlonly 2013 Alexandru Gagniuc <mr.nuke.me@gmail.com>
  *
@@ -127,7 +134,7 @@ qiprog_err qiprog_exit(struct qiprog_context *ctx)
 /**
  * @defgroup discovery QiProg device discovery and handling
  *
- * @ingroup qiprog_api
+ * @ingroup qiprog_public
  *
  * @author @htmlonly &copy; @endhtmlonly 2013 Alexandru Gagniuc <mr.nuke.me@gmail.com>
  *

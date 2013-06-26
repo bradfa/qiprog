@@ -178,8 +178,10 @@ static qiprog_err dev_open(struct qiprog_device *dev)
 static qiprog_err get_capabilities(struct qiprog_device *dev,
 				   struct qiprog_capabilities *caps)
 {
-	int ret;
+	int ret, i;
+	uint8_t buf[64];
 	struct usb_master_priv *priv;
+	struct qiprog_capabilities *le_caps;
 
 	if (!dev)
 		return QIPROG_ERR_ARG;
@@ -188,16 +190,24 @@ static qiprog_err get_capabilities(struct qiprog_device *dev,
 
 	ret = libusb_control_transfer(priv->handle, 0xc0,
 				      QIPROG_GET_CAPABILITIES, 0, 0,
-				      (void *)caps, sizeof(*caps), 3000);
+				      (void *)buf, sizeof(*caps), 3000);
 	if (ret < LIBUSB_SUCCESS) {
 		/* FIXME: print message */
 		return QIPROG_ERR;
 	}
 
+	/* USB is LE, we are host-endian */
+	le_caps = (void *)buf;
+	caps->bus_master = le32_to_h(&(le_caps->bus_master));
+	caps->instruction_set = le16_to_h(&(le_caps->instruction_set));
+	caps->max_direct_data = le32_to_h(&(le_caps->max_direct_data));
+	for (i = 0; i < 10; i++)
+		caps->voltages[i] = le16_to_h(&(le_caps->voltages[i]));
+
 	return QIPROG_SUCCESS;
 }
 
-static qiprog_err set_bus(struct qiprog_device * dev, enum qiprog_bus bus)
+static qiprog_err set_bus(struct qiprog_device *dev, enum qiprog_bus bus)
 {
 	int ret;
 	uint16_t wValue, wIndex;
@@ -232,16 +242,15 @@ static qiprog_err set_bus(struct qiprog_device * dev, enum qiprog_bus bus)
 
 /**
  * @brief QiProg driver 'read_chip_id' member
- *
- * TODO: Data comes in little endian format, however we don't bother with byte
- * order. Works fine on x86 and LE systems only.
  */
 static qiprog_err read_chip_id(struct qiprog_device *dev,
 			       struct qiprog_chip_id ids[9])
 {
-	int ret;
+	int ret, i;
+	uint8_t buf[64];
 	uint16_t wValue, wIndex;
 	struct usb_master_priv *priv;
+	struct qiprog_chip_id *le_ids;
 
 	if (!dev)
 		return QIPROG_ERR_ARG;
@@ -250,10 +259,18 @@ static qiprog_err read_chip_id(struct qiprog_device *dev,
 
 	ret = libusb_control_transfer(priv->handle, 0xc0,
 				      QIPROG_READ_DEVICE_ID, 0, 0,
-				      (void *)ids, sizeof(*ids) * 9, 3000);
+				      (void *)buf, sizeof(*ids) * 9, 3000);
 	if (ret < LIBUSB_SUCCESS) {
 		/* FIXME: print message */
 		return QIPROG_ERR;
+	}
+
+	/* USB is LE, we are host-endian */
+	le_ids = (void *)buf;
+	for (i = 0; i < 9; i++) {
+		ids[i].id_method = le_ids[i].id_method;
+		ids[i].vendor_id = le16_to_h(&(le_ids[i].vendor_id));
+		ids[i].device_id = le32_to_h(&(le_ids[i].device_id));
 	}
 
 	return QIPROG_SUCCESS;
@@ -263,7 +280,6 @@ static qiprog_err read_chip_id(struct qiprog_device *dev,
  * @brief QiProg driver 'read8' member
  *
  * TODO: Try to unify read 8/16/32 into one common function
- * TODO: For 16/32 reads, consider byte order. The USB bus is LE.
  */
 static qiprog_err read8(struct qiprog_device *dev, uint32_t addr,
 			uint8_t * data)
@@ -300,6 +316,7 @@ static qiprog_err read16(struct qiprog_device *dev, uint32_t addr,
 			 uint16_t * data)
 {
 	int ret;
+	uint8_t buf[64];
 	uint16_t wValue, wIndex;
 	struct usb_master_priv *priv;
 
@@ -315,11 +332,14 @@ static qiprog_err read16(struct qiprog_device *dev, uint32_t addr,
 
 	ret = libusb_control_transfer(priv->handle, 0xc0,
 				      QIPROG_READ16, wValue, wIndex,
-				      (void *)data, sizeof(*data), 3000);
+				      (void *)buf, sizeof(*data), 3000);
 	if (ret < LIBUSB_SUCCESS) {
 		/* FIXME: print message */
 		return QIPROG_ERR;
 	}
+
+	/* USB is LE, we are host-endian */
+	*data = le16_to_h(buf);
 
 	return QIPROG_SUCCESS;
 }
@@ -331,6 +351,7 @@ static qiprog_err read32(struct qiprog_device *dev, uint32_t addr,
 			 uint32_t * data)
 {
 	int ret;
+	uint8_t buf[64];
 	uint16_t wValue, wIndex;
 	struct usb_master_priv *priv;
 
@@ -346,11 +367,14 @@ static qiprog_err read32(struct qiprog_device *dev, uint32_t addr,
 
 	ret = libusb_control_transfer(priv->handle, 0xc0,
 				      QIPROG_READ32, wValue, wIndex,
-				      (void *)data, sizeof(*data), 3000);
+				      (void *)buf, sizeof(*data), 3000);
 	if (ret < LIBUSB_SUCCESS) {
 		/* FIXME: print message */
 		return QIPROG_ERR;
 	}
+
+	/* USB is LE, we are host-endian */
+	*data = le32_to_h(buf);
 
 	return QIPROG_SUCCESS;
 }
@@ -359,7 +383,6 @@ static qiprog_err read32(struct qiprog_device *dev, uint32_t addr,
  * @brief QiProg driver 'write8' member
  *
  * TODO: Try to unify write 8/16/32 into one common function
- * TODO: For 16/32 writes, consider byte order. The USB bus is LE.
  */
 static qiprog_err write8(struct qiprog_device *dev, uint32_t addr, uint8_t data)
 {
@@ -379,7 +402,7 @@ static qiprog_err write8(struct qiprog_device *dev, uint32_t addr, uint8_t data)
 
 	ret = libusb_control_transfer(priv->handle, 0x40,
 				      QIPROG_WRITE8, wValue, wIndex,
-				      (void*) &data, sizeof(data), 3000);
+				      (void *)&data, sizeof(data), 3000);
 	if (ret < LIBUSB_SUCCESS) {
 		/* FIXME: print message */
 		return QIPROG_ERR;
@@ -395,6 +418,7 @@ static qiprog_err write16(struct qiprog_device *dev, uint32_t addr,
 			  uint16_t data)
 {
 	int ret;
+	uint8_t buf[64];
 	uint16_t wValue, wIndex;
 	struct usb_master_priv *priv;
 
@@ -408,9 +432,12 @@ static qiprog_err write16(struct qiprog_device *dev, uint32_t addr,
 	/* Least significant 16 bits of the memory address to read from */
 	wIndex = addr & 0xffff;
 
+	/* USB is LE, we are host-endian */
+	h_to_le16(data, buf);
+
 	ret = libusb_control_transfer(priv->handle, 0x40,
 				      QIPROG_WRITE16, wValue, wIndex,
-				      (void*) &data, sizeof(data), 3000);
+				      (void *)buf, sizeof(data), 3000);
 	if (ret < LIBUSB_SUCCESS) {
 		/* FIXME: print message */
 		return QIPROG_ERR;
@@ -426,6 +453,7 @@ static qiprog_err write32(struct qiprog_device *dev, uint32_t addr,
 			  uint32_t data)
 {
 	int ret;
+	uint8_t buf[64];
 	uint16_t wValue, wIndex;
 	struct usb_master_priv *priv;
 
@@ -439,9 +467,12 @@ static qiprog_err write32(struct qiprog_device *dev, uint32_t addr,
 	/* Least significant 16 bits of the memory address to read from */
 	wIndex = addr & 0xffff;
 
+	/* USB is LE, we are host-endian */
+	h_to_le32(data, buf);
+
 	ret = libusb_control_transfer(priv->handle, 0x40,
 				      QIPROG_WRITE32, wValue, wIndex,
-				      (void*) &data, sizeof(data), 3000);
+				      (void *)buf, sizeof(data), 3000);
 	if (ret < LIBUSB_SUCCESS) {
 		/* FIXME: print message */
 		return QIPROG_ERR;

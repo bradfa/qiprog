@@ -29,6 +29,32 @@
 #include <stdlib.h>
 #include <string.h>
 
+/**
+ * @mainpage QiProg API
+ *
+ * @section sec_intro Introduction
+ *
+ * QiProg is a specification for communicating with flash chip programmers over
+ * USB. It was originally developed by Peter Stuge. Later Peter determined that
+ * QiProg is more than just a USB protocol. It is a lean and powerful API.
+ *
+ * QiProg is a complete software->firmware->hardware implementation of the
+ * original specification.
+ *
+ * @section sec_start Getting started
+ *
+ * See the "Modules" page for API information, and more.
+ *
+ * @section sec_website Website
+ *
+ * <a href="http://qiprog.org/">qiprog.org</a>
+ */
+
+/**
+ * @defgroup qiprog_public Public QiProg API
+ * @defgroup qiprog_private Private QiProg drivers and utilities
+ */
+
 /* FIXME: Kill this idiotic include */
 #include <stdio.h>
 

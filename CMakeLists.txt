@@ -57,3 +57,15 @@ target_link_libraries(${PROJECT_NAME}
 	${PKGDEPS_LIBRARIES}
 	libqiprog
 )
+
+#===============================================================================
+#= Documentation
+#-------------------------------------------------------------------------------
+find_package(Doxygen)
+if(DOXYGEN_FOUND)
+	add_custom_target(doc
+		${DOXYGEN_EXECUTABLE} Doxyfile
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		COMMENT "Generating API documentation with Doxygen" VERBATIM
+	)
+endif()

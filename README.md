@@ -34,6 +34,14 @@ Building
 3. Compile:
 > $ make
 
+### Documentation ###
+
+The code is documented with Doxygen comments. If Doxygen is isntalled, cmake
+will create a special 'doc' target for building documentation. To generate
+the documentation, use:
+
+> $ make doc
+
 
 
 Usage

@@ -8,4 +8,5 @@
 *.list
 *.map
 *.kdev4
+doxy/
 build/

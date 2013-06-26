@@ -105,9 +105,7 @@ struct qiprog_device {
 /**
  * @defgroup endian_helpers QiProg byte-order conversion helpers
  *
- * @ingroup qiprog_doxygen_TODO
- *
- * @brief <b>QiProg byte-order conversion helpers</b>
+ * @ingroup qiprog_private
  *
  * Since QiProg drivers need to communicate with the outside world, the byte
  * ordering of "outside world" devices needs to be accounted for. In QiProg
@@ -116,9 +114,14 @@ struct qiprog_device {
  * is never a plain byte stream. With this philosophy QiProg code does not, and
  * must not care about host endianess.
  *
- * Internal data must always be inserted to or extracted from a data stream.
- * Endian conversion macros, or byte-swaps must never be used. Instead, always
- * use these functions.
+ * To enforce this philosophy, these endian conversion helpers always treat host
+ * data as standard integers types, and external data as streams identified by
+ * a pointer.
+ *
+ * @note
+ * Internal data must always be inserted to or extracted from an external dat
+ * a stream. In other words, endian conversion macros, or byte-swaps must never
+ * be used. Instead, always use these functions.
  */
 /** @{ */
 /**

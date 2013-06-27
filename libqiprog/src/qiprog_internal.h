@@ -51,6 +51,11 @@ struct dev_list {
 	struct qiprog_device **devs;
 };
 
+struct qiprog_address {
+	uint32_t start_address;
+	uint32_t max_address;
+} __attribute__ ((packed));
+
 /*
  * TODO: Functions which take varargs are NOT IMPLEMENTED yet.
  */

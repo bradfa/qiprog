@@ -97,11 +97,6 @@ struct qiprog_chip_id {
 	uint32_t device_id;
 } __attribute__ ((packed));
 
-struct qiprog_address {
-	uint32_t start_address;
-	uint32_t max_address;
-} __attribute__ ((packed));
-
 struct qiprog_context;
 struct qiprog_device;
 

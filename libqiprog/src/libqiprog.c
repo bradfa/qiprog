@@ -90,7 +90,13 @@ static const struct qiprog_driver *driver_list[] = {
 /** @{ */
 
 /**
- * @brief
+ * @brief Initialize a QiProg context
+ *
+ * Initialize a qiprog_context, and perform any necessary initialization for
+ * the host platform.
+ *
+ * @param[out] ctx Output location for context pointer. NULL on failure.
+ * @return QIPROG_SUCCESS on success, or a QIPROG_ERR code otherwise.
  */
 qiprog_err qiprog_init(struct qiprog_context **ctx)
 {
@@ -101,7 +107,6 @@ qiprog_err qiprog_init(struct qiprog_context **ctx)
 		/* FIXME: Add some sort console and print a message */
 		return QIPROG_ERR_MALLOC;
 	}
-
 #if CONFIG_DRIVER_USB_MASTER
 	if (libusb_init(&(context->libusb_host_ctx)) != LIBUSB_SUCCESS) {
 		/* FIXME: Printable error message */
@@ -114,9 +119,16 @@ qiprog_err qiprog_init(struct qiprog_context **ctx)
 }
 
 /**
- * @brief
+ * @brief Free a QiProg context
+ *
+ * Release all resources used by the given context. Sould be called after
+ * closing all open devices and before the application terminates.
+ *
+ * @param[in] ctx the context to free. Cannot be NULL.
+ *
+ * @return QIPROG_SUCCESS on success, or a QIPROG_ERR code otherwise.
  */
-qiprog_err qiprog_exit(struct qiprog_context *ctx)
+qiprog_err qiprog_exit(struct qiprog_context * ctx)
 {
 	if (ctx == NULL)
 		return QIPROG_ERR_ARG;
@@ -129,7 +141,6 @@ qiprog_err qiprog_exit(struct qiprog_context *ctx)
 }
 
 /** @} */
-
 
 /**
  * @defgroup discovery QiProg device discovery and handling
@@ -144,10 +155,19 @@ qiprog_err qiprog_exit(struct qiprog_context *ctx)
 /** @{ */
 
 /**
- * @brief
+ * @brief Get a list of all available QiProg devices.
+ *
+ * Scans the system for available QiProg devices, and returns a flat list with
+ * such devices.
+ *
+ * @param[in] ctx the context to operate on.
+ * @param[out] list output location for a list of QiProg devices. TODO: how to
+ * 		    free safely?
+ *
+ * @return The number of QiProg devices in the list.
  */
-size_t qiprog_get_device_list(struct qiprog_context *ctx,
-			      struct qiprog_device ***list)
+size_t qiprog_get_device_list(struct qiprog_context * ctx,
+			      struct qiprog_device *** list)
 {
 	size_t i;
 	struct qiprog_device **devs;

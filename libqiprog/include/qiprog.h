@@ -68,39 +68,52 @@ typedef enum qiprog_error {
 
 /**
  * @brief QiProg device capabilities
- *
- * Note that a QiProg device may not support any instruction set, in which case
- * capabilities.instruction_set = 0, and in which case the interface with
- * bInterfaceNumber = 0 does not have to include EP 2 OUT and EP 2 IN. Those
- * endpoints are then free to be used in another interface in the device, not
- * covered by this protocol description.
- *
- * The capabilities.voltages array indicates which voltages the QiProg device
- * can supply, in millivolt (mV) units. the array ends on the first 0-value, or
- * if no 0-value is present then the array contains exactly 10 voltages.
- *
- * capabilities.max_direct_data contains the maximum number of bytes that can be
- * stored by a QiProg device using the EP 2 OUT instruction set.
  */
 struct qiprog_capabilities {
-	/* bitwise OR of supported QIPROG_LANG_ bits */
+	/** bitwise OR of supported QIPROG_LANG_ bits */
 	uint16_t instruction_set;
-	/* bitwise OR of supported QIPROG_BUS_ bits */
+	/** bitwise OR of supported QIPROG_BUS_ bits */
 	uint32_t bus_master;
+	/**
+	 * capabilities.max_direct_data contains the maximum number of bytes
+	 * that can be stored by a QiProg device using the instruction set
+	 * feature.
+	 *
+	 * Note that a QiProg device may not support any instruction set, in which case
+	 * capabilities.instruction_set = 0.
+	 *
+	 * This feature is in the TODO stage and should not be relied upon.
+	 */
 	uint32_t max_direct_data;
+	/**
+	 * The capabilities.voltages array indicates which voltages the QiProg
+	 * device can supply, in millivolt (mV) units. the array ends on the
+	 * first 0-value, or if no 0-value is present then the array contains
+	 * exactly 10 voltages.
+	 */
 	uint16_t voltages[10];
 } __attribute__ ((packed));
 
+/**
+ * @brief Flash chip identification
+ */
 struct qiprog_chip_id {
+	/** Method used to identify the chip */
 	uint8_t id_method;
+	/** Manufacturer's or Vendor's ID */
 	uint16_t vendor_id;
+	/** The product ID */
 	uint32_t device_id;
 } __attribute__ ((packed));
 
+/** Opaque QiProg context */
 struct qiprog_context;
+/** Opaque QiProg device */
 struct qiprog_device;
 
-QIPROG_BEGIN_DECLS qiprog_err qiprog_init(struct qiprog_context **ctx);
+QIPROG_BEGIN_DECLS
+
+qiprog_err qiprog_init(struct qiprog_context **ctx);
 qiprog_err qiprog_exit(struct qiprog_context *ctx);
 size_t qiprog_get_device_list(struct qiprog_context *ctx,
 			      struct qiprog_device ***list);

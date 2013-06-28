@@ -134,24 +134,24 @@ qiprog_err qiprog_open_device(struct qiprog_device *dev);
 qiprog_err qiprog_get_capabilities(struct qiprog_device *dev,
 				   struct qiprog_capabilities *caps);
 qiprog_err qiprog_set_bus(struct qiprog_device *dev, enum qiprog_bus bus);
-qiprog_err qiprog_set_clock(struct qiprog_device *dev, uint32_t * clock_khz);
+qiprog_err qiprog_set_clock(struct qiprog_device *dev, uint32_t *clock_khz);
 qiprog_err qiprog_read_chip_id(struct qiprog_device *dev,
 			       struct qiprog_chip_id ids[9]);
 qiprog_err qiprog_set_address(struct qiprog_device *dev, uint32_t start,
 			      uint32_t end);
-qiprog_err qiprog_readn(struct qiprog_device *dev, void * dest, uint32_t n);
-qiprog_err qiprog_writen(struct qiprog_device *dev, void * src, uint32_t n);
+qiprog_err qiprog_readn(struct qiprog_device *dev, void *dest, uint32_t n);
+qiprog_err qiprog_writen(struct qiprog_device *dev, void *src, uint32_t n);
 /* TODO: qiprog_set_erase_size */
 /* TODO: qiprog_set_erase_command */
 /* TODO: qiprog_set_write_command */
 qiprog_err qiprog_set_spi_timing(struct qiprog_device *dev,
 				 uint16_t tpu_read_us, uint32_t tces_ns);
 qiprog_err qiprog_read8(struct qiprog_device *dev, uint32_t addr,
-			uint8_t * data);
+			uint8_t *data);
 qiprog_err qiprog_read16(struct qiprog_device *dev, uint32_t addr,
-			 uint16_t * data);
+			 uint16_t *data);
 qiprog_err qiprog_read32(struct qiprog_device *dev, uint32_t addr,
-			 uint32_t * data);
+			 uint32_t *data);
 qiprog_err qiprog_write8(struct qiprog_device *dev, uint32_t addr,
 			 uint8_t data);
 qiprog_err qiprog_write16(struct qiprog_device *dev, uint32_t addr,

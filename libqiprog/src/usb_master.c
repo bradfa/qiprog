@@ -64,7 +64,7 @@ struct usb_master_priv {
 /**
  * @brief Helper to create a new USB QiProg device
  */
-static struct qiprog_device *new_usb_prog(libusb_device * libusb_dev)
+static struct qiprog_device *new_usb_prog(libusb_device *libusb_dev)
 {
 	/*
 	 * Peter Stuge is the person who started it all. He is also the de-facto
@@ -98,7 +98,7 @@ static struct qiprog_device *new_usb_prog(libusb_device * libusb_dev)
 /**
  * @brief Decide if given USB device is a QiProg device
  */
-static bool is_interesting(libusb_device * dev)
+static bool is_interesting(libusb_device *dev)
 {
 	int ret;
 	struct libusb_device_descriptor descr;
@@ -120,7 +120,7 @@ static bool is_interesting(libusb_device * dev)
 /**
  * @brief QiProg driver 'scan' member
  */
-qiprog_err scan(struct qiprog_context * ctx, struct dev_list * qi_list)
+qiprog_err scan(struct qiprog_context *ctx, struct dev_list *qi_list)
 {
 	libusb_device **list;
 	libusb_device *device;
@@ -291,7 +291,7 @@ static qiprog_err read_chip_id(struct qiprog_device *dev,
  * TODO: Try to unify read 8/16/32 into one common function
  */
 static qiprog_err read8(struct qiprog_device *dev, uint32_t addr,
-			uint8_t * data)
+			uint8_t *data)
 {
 	int ret;
 	uint16_t wValue, wIndex;
@@ -322,7 +322,7 @@ static qiprog_err read8(struct qiprog_device *dev, uint32_t addr,
  * @brief QiProg driver 'read16' member
  */
 static qiprog_err read16(struct qiprog_device *dev, uint32_t addr,
-			 uint16_t * data)
+			 uint16_t *data)
 {
 	int ret;
 	uint8_t buf[64];
@@ -357,7 +357,7 @@ static qiprog_err read16(struct qiprog_device *dev, uint32_t addr,
  * @brief QiProg driver 'read32' member
  */
 static qiprog_err read32(struct qiprog_device *dev, uint32_t addr,
-			 uint32_t * data)
+			 uint32_t *data)
 {
 	int ret;
 	uint8_t buf[64];

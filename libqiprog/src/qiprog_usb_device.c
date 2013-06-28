@@ -121,7 +121,7 @@ static uint8_t ctrl_buf[64];
 
 qiprog_err qiprog_handle_control_request(uint8_t bRequest, uint16_t wValue,
 					 uint16_t wIndex, uint16_t wLength,
-					 uint8_t ** data, uint16_t * len)
+					 uint8_t **data, uint16_t *len)
 {
 	qiprog_err ret;
 

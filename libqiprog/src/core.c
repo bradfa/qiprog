@@ -62,8 +62,8 @@ qiprog_err qiprog_open_device(struct qiprog_device *dev)
  *
  * @return QIPROG_SUCCESS on success, or a QIPROG_ERR code otherwise.
  */
-qiprog_err qiprog_get_capabilities(struct qiprog_device * dev,
-				   struct qiprog_capabilities * caps)
+qiprog_err qiprog_get_capabilities(struct qiprog_device *dev,
+				   struct qiprog_capabilities *caps)
 {
 	QIPROG_RETURN_ON_BAD_DEV(dev);
 	return dev->drv->get_capabilities(dev, caps);
@@ -99,7 +99,7 @@ qiprog_err qiprog_get_capabilities(struct qiprog_device * dev,
  *
  * @return QIPROG_SUCCESS on success, or a QIPROG_ERR code otherwise.
  */
-qiprog_err qiprog_set_bus(struct qiprog_device * dev, enum qiprog_bus bus)
+qiprog_err qiprog_set_bus(struct qiprog_device *dev, enum qiprog_bus bus)
 {
 	QIPROG_RETURN_ON_BAD_DEV(dev);
 	return dev->drv->set_bus(dev, bus);
@@ -129,7 +129,7 @@ qiprog_err qiprog_set_bus(struct qiprog_device * dev, enum qiprog_bus bus)
  *
  * @return QIPROG_SUCCESS on success, or a QIPROG_ERR code otherwise.
  */
-qiprog_err qiprog_set_clock(struct qiprog_device * dev, uint32_t * clock_khz)
+qiprog_err qiprog_set_clock(struct qiprog_device *dev, uint32_t *clock_khz)
 {
 	QIPROG_RETURN_ON_BAD_DEV(dev);
 	return dev->drv->set_clock(dev, clock_khz);
@@ -138,7 +138,7 @@ qiprog_err qiprog_set_clock(struct qiprog_device * dev, uint32_t * clock_khz)
 /**
  * @brief TODO
  */
-qiprog_err qiprog_set_spi_timing(struct qiprog_device * dev,
+qiprog_err qiprog_set_spi_timing(struct qiprog_device *dev,
 				 uint16_t tpu_read_us, uint32_t tces_ns)
 {
 	QIPROG_RETURN_ON_BAD_DEV(dev);
@@ -157,7 +157,7 @@ qiprog_err qiprog_set_spi_timing(struct qiprog_device * dev,
  *
  * @return QIPROG_SUCCESS on success, or a QIPROG_ERR code otherwise.
  */
-qiprog_err qiprog_set_vdd(struct qiprog_device * dev, uint16_t vdd_mv)
+qiprog_err qiprog_set_vdd(struct qiprog_device *dev, uint16_t vdd_mv)
 {
 	QIPROG_RETURN_ON_BAD_DEV(dev);
 	return dev->drv->set_vdd(dev, vdd_mv);
@@ -258,7 +258,7 @@ qiprog_err qiprog_set_vdd(struct qiprog_device * dev, uint16_t vdd_mv)
  *
  * @return QIPROG_SUCCESS on success, or a QIPROG_ERR code otherwise.
  */
-qiprog_err qiprog_read_chip_id(struct qiprog_device * dev,
+qiprog_err qiprog_read_chip_id(struct qiprog_device *dev,
 			       struct qiprog_chip_id ids[9])
 {
 	QIPROG_RETURN_ON_BAD_DEV(dev);
@@ -278,7 +278,7 @@ qiprog_err qiprog_read_chip_id(struct qiprog_device * dev,
  *
  * @return QIPROG_SUCCESS on success, or a QIPROG_ERR code otherwise.
  */
-qiprog_err qiprog_set_address(struct qiprog_device * dev, uint32_t start,
+qiprog_err qiprog_set_address(struct qiprog_device *dev, uint32_t start,
 			      uint32_t end)
 {
 	QIPROG_RETURN_ON_BAD_DEV(dev);
@@ -291,13 +291,13 @@ qiprog_err qiprog_set_address(struct qiprog_device * dev, uint32_t start,
 	return dev->drv->set_address(dev, start, end);
 }
 
-qiprog_err qiprog_readn(struct qiprog_device *dev, void * dest, uint32_t n)
+qiprog_err qiprog_readn(struct qiprog_device *dev, void *dest, uint32_t n)
 {
 	QIPROG_RETURN_ON_BAD_DEV(dev);
 	return dev->drv->readn(dev, dest, n);
 }
 
-qiprog_err qiprog_writen(struct qiprog_device *dev, void * src, uint32_t n)
+qiprog_err qiprog_writen(struct qiprog_device *dev, void *src, uint32_t n)
 {
 	QIPROG_RETURN_ON_BAD_DEV(dev);
 	return dev->drv->writen(dev, src, n);
@@ -316,8 +316,7 @@ qiprog_err qiprog_writen(struct qiprog_device *dev, void * src, uint32_t n)
  *
  * @return QIPROG_SUCCESS on success, or a QIPROG_ERR code otherwise.
  */
-qiprog_err qiprog_read8(struct qiprog_device * dev, uint32_t addr,
-			uint8_t * data)
+qiprog_err qiprog_read8(struct qiprog_device *dev, uint32_t addr, uint8_t *data)
 {
 	QIPROG_RETURN_ON_BAD_DEV(dev);
 	return dev->drv->read8(dev, addr, data);
@@ -335,8 +334,8 @@ qiprog_err qiprog_read8(struct qiprog_device * dev, uint32_t addr,
  *
  * @return QIPROG_SUCCESS on success, or a QIPROG_ERR code otherwise.
  */
-qiprog_err qiprog_read16(struct qiprog_device * dev, uint32_t addr,
-			 uint16_t * data)
+qiprog_err qiprog_read16(struct qiprog_device *dev, uint32_t addr,
+			 uint16_t *data)
 {
 	QIPROG_RETURN_ON_BAD_DEV(dev);
 	return dev->drv->read16(dev, addr, data);
@@ -354,8 +353,8 @@ qiprog_err qiprog_read16(struct qiprog_device * dev, uint32_t addr,
  *
  * @return QIPROG_SUCCESS on success, or a QIPROG_ERR code otherwise.
  */
-qiprog_err qiprog_read32(struct qiprog_device * dev, uint32_t addr,
-			 uint32_t * data)
+qiprog_err qiprog_read32(struct qiprog_device *dev, uint32_t addr,
+			 uint32_t *data)
 {
 	QIPROG_RETURN_ON_BAD_DEV(dev);
 	return dev->drv->read32(dev, addr, data);
@@ -373,8 +372,7 @@ qiprog_err qiprog_read32(struct qiprog_device * dev, uint32_t addr,
  *
  * @return QIPROG_SUCCESS on success, or a QIPROG_ERR code otherwise.
  */
-qiprog_err qiprog_write8(struct qiprog_device * dev, uint32_t addr,
-			 uint8_t data)
+qiprog_err qiprog_write8(struct qiprog_device *dev, uint32_t addr, uint8_t data)
 {
 	QIPROG_RETURN_ON_BAD_DEV(dev);
 	return dev->drv->write8(dev, addr, data);
@@ -396,7 +394,7 @@ qiprog_err qiprog_write8(struct qiprog_device * dev, uint32_t addr,
 /**
  * @brief
  */
-qiprog_err qiprog_write16(struct qiprog_device * dev, uint32_t addr,
+qiprog_err qiprog_write16(struct qiprog_device *dev, uint32_t addr,
 			  uint16_t data)
 {
 	QIPROG_RETURN_ON_BAD_DEV(dev);
@@ -415,7 +413,7 @@ qiprog_err qiprog_write16(struct qiprog_device * dev, uint32_t addr,
  *
  * @return QIPROG_SUCCESS on success, or a QIPROG_ERR code otherwise.
  */
-qiprog_err qiprog_write32(struct qiprog_device * dev, uint32_t addr,
+qiprog_err qiprog_write32(struct qiprog_device *dev, uint32_t addr,
 			  uint32_t data)
 {
 	QIPROG_RETURN_ON_BAD_DEV(dev);

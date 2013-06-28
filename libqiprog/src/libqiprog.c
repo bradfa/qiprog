@@ -128,7 +128,7 @@ qiprog_err qiprog_init(struct qiprog_context **ctx)
  *
  * @return QIPROG_SUCCESS on success, or a QIPROG_ERR code otherwise.
  */
-qiprog_err qiprog_exit(struct qiprog_context * ctx)
+qiprog_err qiprog_exit(struct qiprog_context *ctx)
 {
 	if (ctx == NULL)
 		return QIPROG_ERR_ARG;
@@ -166,8 +166,8 @@ qiprog_err qiprog_exit(struct qiprog_context * ctx)
  *
  * @return The number of QiProg devices in the list.
  */
-size_t qiprog_get_device_list(struct qiprog_context * ctx,
-			      struct qiprog_device *** list)
+size_t qiprog_get_device_list(struct qiprog_context *ctx,
+			      struct qiprog_device ***list)
 {
 	size_t i;
 	struct qiprog_device **devs;

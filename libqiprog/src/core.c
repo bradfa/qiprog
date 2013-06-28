@@ -291,6 +291,18 @@ qiprog_err qiprog_set_address(struct qiprog_device * dev, uint32_t start,
 	return dev->drv->set_address(dev, start, end);
 }
 
+qiprog_err qiprog_readn(struct qiprog_device *dev, void * dest, uint32_t n)
+{
+	QIPROG_RETURN_ON_BAD_DEV(dev);
+	return dev->drv->readn(dev, dest, n);
+}
+
+qiprog_err qiprog_writen(struct qiprog_device *dev, void * src, uint32_t n)
+{
+	QIPROG_RETURN_ON_BAD_DEV(dev);
+	return dev->drv->writen(dev, src, n);
+}
+
 /* TODO: qiprog_set_erase_size */
 /* TODO: qiprog_set_erase_command */
 /* TODO: qiprog_set_write_command */

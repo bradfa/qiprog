@@ -139,6 +139,8 @@ qiprog_err qiprog_read_chip_id(struct qiprog_device *dev,
 			       struct qiprog_chip_id ids[9]);
 qiprog_err qiprog_set_address(struct qiprog_device *dev, uint32_t start,
 			      uint32_t end);
+qiprog_err qiprog_readn(struct qiprog_device *dev, void * dest, uint32_t n);
+qiprog_err qiprog_writen(struct qiprog_device *dev, void * src, uint32_t n);
 /* TODO: qiprog_set_erase_size */
 /* TODO: qiprog_set_erase_command */
 /* TODO: qiprog_set_write_command */

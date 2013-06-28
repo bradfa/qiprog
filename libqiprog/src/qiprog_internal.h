@@ -87,6 +87,10 @@ struct qiprog_driver {
 	qiprog_err(*set_write_command) (struct qiprog_device * dev, ...);
 	qiprog_err(*set_spi_timing) (struct qiprog_device * dev,
 				     uint16_t tpu_read_us, uint32_t tces_ns);
+	qiprog_err(*readn) (struct qiprog_device * dev, void * dest,
+			    uint32_t n);
+	qiprog_err(*writen) (struct qiprog_device * dev, void * src,
+			     uint32_t n);
 	qiprog_err(*read8) (struct qiprog_device * dev, uint32_t addr,
 			    uint8_t * data);
 	qiprog_err(*read16) (struct qiprog_device * dev, uint32_t addr,

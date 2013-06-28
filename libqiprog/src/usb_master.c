@@ -491,6 +491,40 @@ static qiprog_err write32(struct qiprog_device *dev, uint32_t addr,
 }
 
 /**
+ * @brief QiProg driver 'set_address' member
+ */
+static qiprog_err set_address(struct qiprog_device *dev, uint32_t start,
+			      uint32_t end)
+{
+	int ret;
+	uint8_t buf[64];
+	struct usb_master_priv *priv;
+	struct qiprog_address *le_addrs;
+
+	if (!dev)
+		return QIPROG_ERR_ARG;
+	if (!(priv = dev->priv))
+		return QIPROG_ERR_ARG;
+
+	qi_spew("Setting address range 0x%.8lx -> 0x%.8lx\n", start, end);
+
+	/* USB is LE, we are host-endian */
+	le_addrs = (void *)buf;
+	h_to_le32(start, &(le_addrs->start_address));
+	h_to_le32(end, &(le_addrs->max_address));
+
+	ret = libusb_control_transfer(priv->handle, 0x40,
+				      QIPROG_SET_ADDRESS, 0, 0,
+			              (void *)buf, sizeof(*le_addrs), 3000);
+	if (ret < LIBUSB_SUCCESS) {
+		qi_err("Control transfer failed: %s", libusb_error_name(ret));
+		return QIPROG_ERR;
+	}
+
+	return QIPROG_SUCCESS;
+}
+
+/**
  * @brief The actual USB host driver structure
  */
 struct qiprog_driver qiprog_usb_master_drv = {
@@ -499,6 +533,7 @@ struct qiprog_driver qiprog_usb_master_drv = {
 	.set_bus = set_bus,
 	.get_capabilities = get_capabilities,
 	.read_chip_id = read_chip_id,
+	.set_address = set_address,
 	.read8 = read8,
 	.read16 = read16,
 	.read32 = read32,

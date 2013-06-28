@@ -57,6 +57,17 @@ struct qiprog_address {
 } __attribute__ ((packed));
 
 /*
+ * Logging helpers:
+ */
+void qi_log(enum qiprog_log_level level, const char *fmt, ...);
+
+#define qi_perr(str, ...)	qi_log(QIPROG_LOG_ERR, str,  ##__VA_ARGS__)
+#define qi_pwarn(str, ...)	qi_log(QIPROG_LOG_WARN, str, ##__VA_ARGS__)
+#define qi_pinfo(str, ...)	qi_log(QIPROG_LOG_INFO, str, ##__VA_ARGS__)
+#define qi_pdbg(str, ...)	qi_log(QIPROG_LOG_DBG, str,  ##__VA_ARGS__)
+#define qi_pspew(str, ...)	qi_log(QIPROG_LOG_SPEW, str, ##__VA_ARGS__)
+
+/*
  * TODO: Functions which take varargs are NOT IMPLEMENTED yet.
  */
 struct qiprog_driver {

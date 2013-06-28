@@ -38,6 +38,18 @@
 #endif
 
 /**
+ * @brief QiProg logging verbosity
+ */
+enum qiprog_log_level {
+	QIPROG_LOG_NONE = 0, /**< Do not print messages */
+	QIPROG_LOG_ERR = 1,  /**< Print error conditions. */
+	QIPROG_LOG_WARN = 2, /**< Print warnings. */
+	QIPROG_LOG_INFO = 3, /**< Print informational messages. */
+	QIPROG_LOG_DBG = 4,  /**< Print debug messages. */
+	QIPROG_LOG_SPEW = 5, /**< Print way too many messages. */
+};
+
+/**
  * @brief Specify different bus types supported by QiProg devices.
  *
  * These values may be OR'ed together to specify more than one bus
@@ -114,6 +126,7 @@ struct qiprog_device;
 QIPROG_BEGIN_DECLS
 
 qiprog_err qiprog_init(struct qiprog_context **ctx);
+void qiprog_set_loglevel(enum qiprog_log_level level);
 qiprog_err qiprog_exit(struct qiprog_context *ctx);
 size_t qiprog_get_device_list(struct qiprog_context *ctx,
 			      struct qiprog_device ***list);

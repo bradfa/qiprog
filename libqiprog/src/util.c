@@ -39,6 +39,8 @@
 #include <qiprog.h>
 #include "qiprog_internal.h"
 
+#include <stdio.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -117,6 +119,58 @@ struct qiprog_device *qiprog_new_device(void)
 qiprog_err qiprog_free_device(struct qiprog_device *dev)
 {
 	free(dev);
+}
+
+/*
+ * Logging helpers:
+ */
+/* Log nothing by default */
+static int loglevel = QIPROG_LOG_NONE;
+
+/**
+ * @ingroup initialization
+ */
+/** @{ */
+/**
+ * @brief Set the verbosity of messages printed by libqiprog
+ *
+ * By default, libqiprog will not print any messages. This behavior can be
+ * altered by changing the default loglevel.
+ *
+ * QIPROG_LOG_WARN or QIPROG_LOG_INFO are recommended for debugging
+ * applications. More verbose levels are designed to be used when debugging
+ * libqiprog itself.
+ *
+ * @param[in] level the message verbosity level to use
+ */
+void qiprog_set_loglevel(enum qiprog_log_level level)
+{
+	loglevel = level;
+}
+/** @} */
+
+/**
+ * @brief Log messages based on their severity
+ *
+ * Log to stdout by default
+ * TODO: have configurable logfiles?
+ */
+void qi_log(enum qiprog_log_level level, const char *fmt, ...)
+{
+	va_list args;
+
+	/* Passing QIPROG_LOG_NONE for level will not force us to log */
+	if (loglevel == QIPROG_LOG_NONE)
+		return;
+
+	if (level > loglevel)
+		return;
+
+	va_start(args, fmt);
+	vfprintf(stdout, fmt, args);
+	va_end(args);
+	fprintf(stdout, "\n");
+
 }
 
 /** @} */

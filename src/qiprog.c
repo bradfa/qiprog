@@ -292,6 +292,9 @@ int open_device(struct qiprog_cfg *conf)
 	struct qiprog_context *ctx;
 	struct qiprog_device **devs;
 
+	/* Debug _everything_ */
+	qiprog_set_loglevel(QIPROG_LOG_SPEW);
+
 	if ((ret = qiprog_init(&ctx)) != QIPROG_SUCCESS) {
 		printf("libqiprog initialization failure\n");
 		return EXIT_FAILURE;

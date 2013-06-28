@@ -44,6 +44,13 @@
 #include <stdbool.h>
 #include <string.h>
 
+#define LOG_DOMAIN "usb_host: "
+#define qi_err(str, ...)	qi_perr(LOG_DOMAIN str,  ##__VA_ARGS__)
+#define qi_warn(str, ...)	qi_pwarn(LOG_DOMAIN str, ##__VA_ARGS__)
+#define qi_info(str, ...)	qi_pinfo(LOG_DOMAIN str, ##__VA_ARGS__)
+#define qi_dbg(str, ...)	qi_pdbg(LOG_DOMAIN str,  ##__VA_ARGS__)
+#define qi_spew(str, ...)	qi_pspew(LOG_DOMAIN str, ##__VA_ARGS__)
+
 struct qiprog_driver qiprog_usb_master_drv;
 
 /**
@@ -75,6 +82,7 @@ static struct qiprog_device *new_usb_prog(libusb_device * libusb_dev)
 
 	if ((priv = malloc(sizeof(*priv))) == NULL) {
 		qiprog_free_device(peter_stuge);
+		qi_warn("Could not allocate memory for device. Aborting");
 		return NULL;
 	}
 
@@ -97,7 +105,7 @@ static bool is_interesting(libusb_device * dev)
 
 	ret = libusb_get_device_descriptor(dev, &descr);
 	if (ret != LIBUSB_SUCCESS) {
-		/* FIXME: print message */
+		qi_warn("Could not get descriptor: %s", libusb_error_name(ret));
 		return false;
 	}
 
@@ -132,8 +140,8 @@ qiprog_err scan(struct qiprog_context * ctx, struct dev_list * qi_list)
 		if (is_interesting(device)) {
 			qi_dev = new_usb_prog(device);
 			if (qi_dev == NULL) {
-				/* OOPS */
 				libusb_free_device_list(list, 1);
+				qi_err("Malloc failure");
 				return QIPROG_ERR_MALLOC;
 			}
 			dev_list_append(qi_list, qi_dev);
@@ -159,13 +167,14 @@ static qiprog_err dev_open(struct qiprog_device *dev)
 
 	ret = libusb_open(priv->usb_dev, &(priv->handle));
 	if (ret != LIBUSB_SUCCESS) {
-		/* FIXME: print message */
+		qi_err("Could not open device: %s", libusb_error_name(ret));
 		return QIPROG_ERR;
 	}
 
 	ret = libusb_claim_interface(priv->handle, 0);
 	if (ret != LIBUSB_SUCCESS) {
-		/* FIXME: print message */
+		qi_warn("Could not claim interface: %s",
+			libusb_error_name(ret));
 		return QIPROG_ERR;
 	}
 
@@ -192,7 +201,7 @@ static qiprog_err get_capabilities(struct qiprog_device *dev,
 				      QIPROG_GET_CAPABILITIES, 0, 0,
 				      (void *)buf, sizeof(*caps), 3000);
 	if (ret < LIBUSB_SUCCESS) {
-		/* FIXME: print message */
+		qi_err("Control transfer failed: %s", libusb_error_name(ret));
 		return QIPROG_ERR;
 	}
 
@@ -233,7 +242,7 @@ static qiprog_err set_bus(struct qiprog_device *dev, enum qiprog_bus bus)
 				      QIPROG_SET_BUS, wValue, wIndex,
 				      NULL, 0, 3000);
 	if (ret < LIBUSB_SUCCESS) {
-		/* FIXME: print message */
+		qi_err("Control transfer failed: %s", libusb_error_name(ret));
 		return QIPROG_ERR;
 	}
 
@@ -261,7 +270,7 @@ static qiprog_err read_chip_id(struct qiprog_device *dev,
 				      QIPROG_READ_DEVICE_ID, 0, 0,
 				      (void *)buf, sizeof(*ids) * 9, 3000);
 	if (ret < LIBUSB_SUCCESS) {
-		/* FIXME: print message */
+		qi_err("Control transfer failed: %s", libusb_error_name(ret));
 		return QIPROG_ERR;
 	}
 
@@ -302,7 +311,7 @@ static qiprog_err read8(struct qiprog_device *dev, uint32_t addr,
 				      QIPROG_READ8, wValue, wIndex,
 				      (void *)data, sizeof(*data), 3000);
 	if (ret < LIBUSB_SUCCESS) {
-		/* FIXME: print message */
+		qi_err("Control transfer failed: %s", libusb_error_name(ret));
 		return QIPROG_ERR;
 	}
 
@@ -334,7 +343,7 @@ static qiprog_err read16(struct qiprog_device *dev, uint32_t addr,
 				      QIPROG_READ16, wValue, wIndex,
 				      (void *)buf, sizeof(*data), 3000);
 	if (ret < LIBUSB_SUCCESS) {
-		/* FIXME: print message */
+		qi_err("Control transfer failed: %s", libusb_error_name(ret));
 		return QIPROG_ERR;
 	}
 
@@ -369,7 +378,7 @@ static qiprog_err read32(struct qiprog_device *dev, uint32_t addr,
 				      QIPROG_READ32, wValue, wIndex,
 				      (void *)buf, sizeof(*data), 3000);
 	if (ret < LIBUSB_SUCCESS) {
-		/* FIXME: print message */
+		qi_err("Control transfer failed: %s", libusb_error_name(ret));
 		return QIPROG_ERR;
 	}
 
@@ -404,7 +413,7 @@ static qiprog_err write8(struct qiprog_device *dev, uint32_t addr, uint8_t data)
 				      QIPROG_WRITE8, wValue, wIndex,
 				      (void *)&data, sizeof(data), 3000);
 	if (ret < LIBUSB_SUCCESS) {
-		/* FIXME: print message */
+		qi_err("Control transfer failed: %s", libusb_error_name(ret));
 		return QIPROG_ERR;
 	}
 
@@ -439,7 +448,7 @@ static qiprog_err write16(struct qiprog_device *dev, uint32_t addr,
 				      QIPROG_WRITE16, wValue, wIndex,
 				      (void *)buf, sizeof(data), 3000);
 	if (ret < LIBUSB_SUCCESS) {
-		/* FIXME: print message */
+		qi_err("Control transfer failed: %s", libusb_error_name(ret));
 		return QIPROG_ERR;
 	}
 
@@ -474,7 +483,7 @@ static qiprog_err write32(struct qiprog_device *dev, uint32_t addr,
 				      QIPROG_WRITE32, wValue, wIndex,
 				      (void *)buf, sizeof(data), 3000);
 	if (ret < LIBUSB_SUCCESS) {
-		/* FIXME: print message */
+		qi_err("Control transfer failed: %s", libusb_error_name(ret));
 		return QIPROG_ERR;
 	}
 

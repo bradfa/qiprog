@@ -95,7 +95,7 @@ void dev_list_append(struct dev_list *list, struct qiprog_device *dev)
 /**
  * @brief Allocate memory for a new qiprog_device
  */
-struct qiprog_device *qiprog_new_device(void)
+struct qiprog_device *qiprog_new_device(struct qiprog_context *ctx)
 {
 	struct qiprog_device *dev;
 
@@ -109,6 +109,9 @@ struct qiprog_device *qiprog_new_device(void)
 	 * preferable to initialize all fields to 0.
 	 */
 	memset(dev, 0, sizeof(*dev));
+
+	/* Store the context associated with the device */
+	dev->ctx = ctx;
 
 	return dev;
 }

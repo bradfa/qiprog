@@ -116,6 +116,8 @@ struct qiprog_device {
 	struct qiprog_address curr_addr_range;
 	/* Underlying driver */
 	struct qiprog_driver *drv;
+	/* Underlying context */
+	struct qiprog_context *ctx;
 	/* Per-device, specific context */
 	void *priv;
 };
@@ -202,7 +204,7 @@ inline static void h_to_le32(uint32_t val32, void *dest)
 qiprog_err dev_list_init(struct dev_list *list);
 qiprog_err dev_list_free(struct dev_list *list);
 void dev_list_append(struct dev_list *list, struct qiprog_device *dev);
-struct qiprog_device *qiprog_new_device(void);
+struct qiprog_device *qiprog_new_device(struct qiprog_context *ctx);
 qiprog_err qiprog_free_device(struct qiprog_device *dev);
 
 #endif				/* QIPROG_INTERNAL_H */

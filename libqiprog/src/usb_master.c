@@ -64,7 +64,8 @@ struct usb_master_priv {
 /**
  * @brief Helper to create a new USB QiProg device
  */
-static struct qiprog_device *new_usb_prog(libusb_device *libusb_dev)
+static struct qiprog_device *new_usb_prog(libusb_device *libusb_dev,
+					  struct qiprog_context *ctx)
 {
 	/*
 	 * Peter Stuge is the person who started it all. He is also the de-facto
@@ -75,7 +76,7 @@ static struct qiprog_device *new_usb_prog(libusb_device *libusb_dev)
 	struct qiprog_device *peter_stuge;
 	struct usb_master_priv *priv;
 
-	peter_stuge = qiprog_new_device();
+	peter_stuge = qiprog_new_device(ctx);
 
 	if (peter_stuge == NULL)
 		return NULL;
@@ -138,7 +139,7 @@ qiprog_err scan(struct qiprog_context *ctx, struct dev_list *qi_list)
 	for (i = 0; i < cnt; i++) {
 		device = list[i];
 		if (is_interesting(device)) {
-			qi_dev = new_usb_prog(device);
+			qi_dev = new_usb_prog(device, ctx);
 			if (qi_dev == NULL) {
 				libusb_free_device_list(list, 1);
 				qi_err("Malloc failure");

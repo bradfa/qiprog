@@ -241,6 +241,9 @@ qiprog_err qiprog_handle_control_request(uint8_t bRequest, uint16_t wValue,
 	/* Assume we will not be able to handle the request. */
 	ret = QIPROG_ERR;
 
+	/* The handler should decide if any data is to be returned */
+	*len = 0;
+
 	switch (bRequest) {
 	case QIPROG_GET_CAPABILITIES: {
 		struct qiprog_capabilities *caps = (void*) ctrl_buf;

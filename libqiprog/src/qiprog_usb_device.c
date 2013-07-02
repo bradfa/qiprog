@@ -268,9 +268,12 @@ qiprog_err qiprog_handle_control_request(uint8_t bRequest, uint16_t wValue,
 		*len = sizeof(*ids) * 9;
 		break;
 	}
-	case QIPROG_SET_ADDRESS:
-		/* Not Handled */
+	case QIPROG_SET_ADDRESS: {
+		struct qiprog_address *addrs = (void *)*data;
+		ret = qiprog_set_address(qi_dev, addrs->start_address,
+					 addrs->max_address);
 		break;
+	}
 	case QIPROG_SET_ERASE_SIZE:
 		/* Not Handled */
 		break;

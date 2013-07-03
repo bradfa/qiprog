@@ -238,6 +238,8 @@ qiprog_err qiprog_handle_control_request(uint8_t bRequest, uint16_t wValue,
 {
 	qiprog_err ret;
 
+	(void)wLength;
+
 	/* Assume we will not be able to handle the request. */
 	ret = QIPROG_ERR;
 
@@ -264,7 +266,7 @@ qiprog_err qiprog_handle_control_request(uint8_t bRequest, uint16_t wValue,
 	case QIPROG_READ_DEVICE_ID: {
 		struct qiprog_chip_id *ids = (void*) ctrl_buf;
 		ret = qiprog_read_chip_id(qi_dev, ids);
-		*data = ids;
+		*data = (void *)ids;
 		*len = sizeof(*ids) * 9;
 		break;
 	}

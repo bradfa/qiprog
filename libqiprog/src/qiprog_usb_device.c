@@ -90,7 +90,89 @@
  *
  * @ref qiprog_change_device() is very useful during @ref qiprog_set_bus()
  * commands, where each bus has a separate driver.
+ *
+ * @section ctrl_req Handling control requests
+ *
+ * Control requests are the easiest to handle, since they are handled
+ * synchronously. As soon as the device's USB stack receives a control packet on
+ * the QiProg interface, it should forward it to
+ * @ref qiprog_handle_control_request(). This function will handle both IN and
+ * OUT requests equally, and there is no need for extra logic to distinguish
+ * between the two. Only call @ref qiprog_handle_control_request() for transfers
+ * with type VENDOR and recipient DEVICE (bmRequestType = 0xc0 or 0x40).
+ *
+ * <h3> Communicating the status to the host </h3>
+ *
+ * A return value of QIPROG_SUCCESS indicates that the control transaction was
+ * handled successfully, and that an ACK handshake may be transmitted. Any other
+ * return value indicates a failure, and a STALL handshake should be transmitted
+ * to indicate the failure to the host.
+ *
+ * <h3> Sending data back to the host (IN transactions) </h3>
+ *
+ * If data needs to be returned to the host, the *len parameter will be non-zero
+ * to indicate the length of data to send back. The **data parameter will point
+ * to the buffer containing packet to be sent. When *len is non-zero, data must
+ * be returned to the host for the transaction to complete successfully.
+ *
+ * <h3> Example control transaction handler </h3>
+ *
+ * @note
+ * Depending on the capabilities of your USB stack, the handling of the control
+ * requests may differ. Some stacks handle ACKs and STALLs automatically, in
+ * which case some of the steps below would not be needed. Check the
+ * documentation of your USB stack to see which steps are and which are not
+ * needed. The following example assumes a very basic stack is used:
+ *
+ * @code{.c}
+ *	uint8_t *data;
+ *	uint16_t len;
+ *
+ *	// If there is a data stage, read the packet from the control endpoint
+ *	if (req->wLength > 0)
+ *		len = control_endpoint_read(data);
+ *	else
+ *		len = 0;
+ *
+ *	// Let QiProg handle the details
+ *	ret = qiprog_handle_control_request(req->bRequest, req->wValue,
+ *					    req->wIndex, req->wLength,
+ *					    &data, &len);
+ *
+ *	if (ret != QIPROG_SUCCESS) {
+ *		// There was an error. STALL the endpoint
+ *		stall_control_endpoint();
+ *		return;
+ *	}
+ *
+ *	if (len != 0) {
+ *		// We need to send data back to the host
+ *		control_endpoint_write(data, len);
+ *	} else {
+ *		// No data to return, but we can ACK
+ *		ack_control_endpoint();
+ *	}
+ * @endcode
+ *
+ * If you are using the libopencm3 USB stack the following is all that is
+ * needed in the vendor control request handler:
+ *
+ * @code{.c}
+ *	ret = qiprog_handle_control_request(req->bRequest, req->wValue,
+ *					    req->wIndex, req->wLength,
+ *					    buf, len);
+ *
+ *	// ACK or STALL based on whether QiProg handles the request
+ *	return (ret == QIPROG_SUCCESS);
+ * @endcode
+ *
+ *
+ * @section bulk_req Handling bulk transactions
+ *
+ * @warning
+ * This section is still in TODO stage.
  */
+/** @{ */
 
 #include <qiprog_usb_dev.h>
 
@@ -107,6 +189,20 @@
  */
 static struct qiprog_device *qi_dev = NULL;
 
+/**
+ * @brief Change the QiProg device to operate on
+ *
+ * Changes the internal QiProg device to operate on. If an active device already
+ * exists, it is closed by calling its .dev_close() member. This allows you to
+ * use .dev_close() to restore the hardware (GPIO and peripherals) to their
+ * state before opening the device.
+ * \n
+ * The .dev_open() member of the new device is called. .dev_open() allows you to
+ * configure the hardware used by the device to a known state before performing
+ * operations with the device.
+ *
+ * @param[in] new_dev A new internal QiProg device to operate on
+ */
 void qiprog_change_device(struct qiprog_device *new_dev)
 {
 	/* FIXME: close old driver */
@@ -119,6 +215,23 @@ void qiprog_change_device(struct qiprog_device *new_dev)
 
 static uint8_t ctrl_buf[64];
 
+/**
+ * @brief Handle USB control requests
+ *
+ * @param[in] bRequest the bRequest field of the control transaction
+ * @param[in] wValue the wValue field of the control transaction
+ * @param[in] wIndex the wIndex field of the control transaction
+ * @param[in] wLength the wLength field of the control transaction
+ * @param[in] data pointer to a buffer containing the data of the transaction
+ * @param[out] data pointer to a buffer with data to retutn to the host. Only
+ * 		    valid if len is non-zero.
+ * @param[out] len The size of packet in data, which needs to be sent back to
+ * 		   the host
+ * 		   - 0 if no data needs to be returned (OUT transaction)
+ *
+ * @return QIPROG_SUCCESS on success, or a QIPROG_ERR code otherwise. The
+ * 	   control endpoint should be STALL'ed on errors.
+ */
 qiprog_err qiprog_handle_control_request(uint8_t bRequest, uint16_t wValue,
 					 uint16_t wIndex, uint16_t wLength,
 					 uint8_t **data, uint16_t *len)
@@ -216,3 +329,5 @@ qiprog_err qiprog_handle_control_request(uint8_t bRequest, uint16_t wValue,
 
 	return ret;
 }
+
+/** @} */

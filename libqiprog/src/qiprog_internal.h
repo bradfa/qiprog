@@ -185,7 +185,7 @@ inline static void h_to_le16(uint16_t val16, void *dest)
  * @param val32 32-bit value to insert in the data stream
  * @param dest Location in the data stream where the value should be inserted
  */
-inline static void h_to_le32(uint16_t val32, void *dest)
+inline static void h_to_le32(uint32_t val32, void *dest)
 {
 	uint8_t *b = dest;
 	b[0] = (val32 >> 0) & 0xff;

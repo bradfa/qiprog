@@ -213,8 +213,6 @@ void qiprog_change_device(struct qiprog_device *new_dev)
 	qi_dev->drv->dev_open(qi_dev);
 }
 
-static uint8_t ctrl_buf[64];
-
 /**
  * @brief Handle USB control requests
  *
@@ -237,6 +235,7 @@ qiprog_err qiprog_handle_control_request(uint8_t bRequest, uint16_t wValue,
 					 uint8_t **data, uint16_t *len)
 {
 	qiprog_err ret;
+	static uint8_t ctrl_buf[64];
 
 	(void)wLength;
 

@@ -170,7 +170,58 @@
  * @section bulk_req Handling bulk transactions
  *
  * @warning
- * This section is still in TODO stage.
+ * This section is still in TODO stage. The following mechanism is subject to
+ * change.
+ *
+ * In order to maximize throughput, bulk operations are treated asynchronously
+ * by QiProg. This approach requires a closer cooperation between QiProg and the
+ * rest of the firmware. Unlike control requests, which can be entirely
+ * interrupt driven, bulk operations are polled.
+ *
+ * <h3> Initializing the QiProg subsystem </h3>
+ *
+ * You first need to tell QiProg how to communicate with the rest of the
+ * firmware. This is achieved with @ref qiprog_usb_dev_init(). The send_packet
+ * and recv_packet tell QiProg how to move data over the USB connection. These
+ * functions must only operate on the endpoint which handles the read and erase
+ * operations, not the instruction set endpoint. This endpoint is the first
+ * endpoint in the USB descriptors.
+ *
+ * Although data returned by QiProg via send_packet can be safely buffered, it
+ * must be sent over the bus in-order, and must NOT be coalesced into larger
+ * packets. Each send_packet callback must send exactly one packet of thei
+ * indicated size. Although not required, it is recommended to only send each
+ * packet after the host has sent an IN token to the endpoint. If a packet
+ * cannot be transmitted at the moment, this function must not interfere with
+ * other transfers, and must return 0. On success, it must return the number of
+ * bytes transmitted. If the number of sent bytes does not match the packet size
+ * requested, QiProg will treat this as an error.
+ *
+ * As with send_packet, data sent to QiProg via recv_packet must be sent to
+ * QiProg in-order, and must NOT be coalesced into larger chunks. Each
+ * recv_packet call must only return one packet to QiProg. If no packet is
+ * available, recv_packet must return 0. On success, it must return the number
+ * of bytes received. Unlike send_packet, if less bytes are received than
+ * requested, QiProg will not treat the situation as an error.
+ *
+ * The max_rx_packet and max_tx_packet tell QiProg the maximum packet size of an
+ * IN packet and OUT packet respectively. These should in the majority of cases,
+ * be equal; however, if they are not identiacal, QiProg will respect these
+ * sizes when moving packets.
+ *
+ * Finally, bulk_buf, must be a memory region capable of holding at least four
+ * IN or four OUT packets, whichever is greater. This buffer must be available
+ * to QiProg indefinitely, and must be left untouched by the firmware.
+ *
+ * <h3> Handling QiProg events </h3>
+ *
+ * QiProg events are processed by @ref qiprog_handle_events(). This function
+ * should be called continuously from the main firmware loop. This handler is
+ * safe to call at any time, even before a call to @ref qiprog_usb_dev_init().
+ *
+ * @todo
+ * The event handler is not safely re-entrant if interrupted by a control
+ * request. Fix this.
  */
 /** @{ */
 
@@ -187,6 +238,7 @@
  * This process is a little different than "full-blown" QiProg, but it is best
  * suited for embedded devices.
  */
+/** @private */
 static struct qiprog_device *qi_dev = NULL;
 
 /**
@@ -335,6 +387,173 @@ qiprog_err qiprog_handle_control_request(uint8_t bRequest, uint16_t wValue,
 	}
 
 	return ret;
+}
+
+/*==============================================================================
+ *= Asynchronous task manager
+ *----------------------------------------------------------------------------*/
+/** @cond private */
+struct qiprog_task {
+	uint8_t status;
+	uint8_t *buf;
+	uint16_t len;
+};
+
+struct qiprog_task_list {
+	struct qiprog_task tasks[4];
+	uint8_t task_start;
+};
+
+static struct qiprog_task_list task_list = {
+	.tasks = {{
+		.status = 0,
+		.buf = NULL,
+		.len = 0,
+	}, {
+		.status = 0,
+		.buf = NULL,
+		.len = 0,
+	}, {
+		.status = 0,
+		.buf = NULL,
+		.len = 0,
+	}, {
+		.status = 0,
+		.buf = NULL,
+		.len = 0,
+	}},
+	.task_start = 0,
+};
+
+enum {
+	IDLE,
+	READY_SEND,
+};
+/** @endcond */
+
+/** @private */
+static struct qiprog_task *get_free_task(void)
+{
+	int i, dx;
+	struct qiprog_task *task;
+
+	for (i = 0; i < 4; i++) {
+		dx = (i + task_list.task_start) & 3;
+		task = &(task_list.tasks[dx]);
+		if (task->status == IDLE)
+			return task;
+	}
+	return NULL;
+}
+
+/** @private */
+static struct qiprog_task *get_first_task(void)
+{
+	return &(task_list.tasks[task_list.task_start]);
+}
+
+/** @private */
+static void idle_task(struct qiprog_task *task)
+{
+	task_list.task_start = (task_list.task_start + 1) & 3;
+	task->status = IDLE;
+	task->len = 0;
+}
+
+/*==============================================================================
+ *= How to move packets around
+ *----------------------------------------------------------------------------*/
+/** @cond private */
+static qiprog_packet_io_cb qi_read_packet = NULL;
+static qiprog_packet_io_cb qi_write_packet = NULL;
+static uint16_t qi_max_rx_packet = 0;
+static uint16_t qi_max_tx_packet = 0;
+static uint8_t *qi_bulk_buf = NULL;
+/** @endcond */
+
+/**
+ * @brief handle stuff
+ */
+qiprog_err qiprog_usb_dev_init(qiprog_packet_io_cb send_packet,
+			       qiprog_packet_io_cb recv_packet,
+			       uint16_t max_rx_packet, uint16_t max_tx_packet,
+			       uint8_t *bulk_buf)
+{
+	int i;
+	uint16_t max_packet;
+
+	if ((send_packet == NULL) ||
+	    (recv_packet == NULL) ||
+	    (max_rx_packet == 0) ||
+	    (max_tx_packet == 0) ||
+	    (bulk_buf == NULL))
+		return QIPROG_ERR_ARG;
+
+	qi_read_packet = recv_packet;
+	qi_write_packet = send_packet;
+	qi_max_rx_packet = max_rx_packet;
+	qi_max_tx_packet = max_tx_packet;
+	qi_bulk_buf = bulk_buf;
+
+	max_packet = MAX(max_rx_packet, max_tx_packet);
+	for (i = 0; i < 4; i++)
+		task_list.tasks[i].buf = bulk_buf + max_packet * i;
+
+	return QIPROG_SUCCESS;
+}
+
+/** @private */
+static void handle_send(void)
+{
+	uint16_t txd;
+	struct qiprog_task *task;
+
+	/*
+	 * See if any packet needs sending
+	 */
+	task = get_first_task();
+	/* Try to send if it wasn't sent last time */
+	if (task->status == READY_SEND) {
+		txd = qi_write_packet(task->buf, task->len);
+		/* Clear task from queue if successfully transmitted */
+		if (txd == task->len)
+			idle_task(task);
+	}
+}
+
+/**
+ * @brief QiProg event handler
+ */
+void qiprog_handle_events(void)
+{
+	uint32_t len, start, end;
+	struct qiprog_task *task;
+
+	/* Have we been initialized properly? */
+	if (qi_bulk_buf == NULL)
+		return;
+
+	handle_send();
+
+	/*
+	 * Now see if there is anything we can read
+	 */
+	start = qi_dev->curr_addr_range.start_address;
+	end = qi_dev->curr_addr_range.max_address;
+	if (start == end)
+		return;
+	len = end - start + 1;
+
+	if (len == 0)
+		return;
+
+	/* Get a free task */
+	if ((task = get_free_task()) == NULL)
+		return;
+
+	task->len = MIN(len, qi_max_tx_packet);
+	qiprog_readn(qi_dev, task->buf, task->len);
+	task->status = READY_SEND;
 }
 
 /** @} */

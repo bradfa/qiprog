@@ -28,10 +28,18 @@
 #include <qiprog_usb.h>
 #include "../src/qiprog_internal.h"
 
+typedef uint16_t (*qiprog_packet_io_cb) (void *data, uint16_t len);
+
 void qiprog_change_device(struct qiprog_device *new_dev);
 
 qiprog_err qiprog_handle_control_request(uint8_t bRequest, uint16_t wValue,
 					 uint16_t wIndex, uint16_t wLength,
 					 uint8_t **data, uint16_t *len);
+
+qiprog_err qiprog_usb_dev_init(qiprog_packet_io_cb send_packet,
+			       qiprog_packet_io_cb recv_packet,
+			       uint16_t max_rx_packet, uint16_t max_tx_packet,
+			       uint8_t *bulk_buf);
+void qiprog_handle_events(void);
 
 #endif				/* __QIPROG_USB_DEV_H */

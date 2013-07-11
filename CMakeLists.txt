@@ -40,7 +40,7 @@ include_directories(${PKGDEPS_INCLUDE_DIRS}
 )
 link_directories(${PKGDEPS_LIBRARY_DIRS})
 
-add_definitions(-Wall)
+add_definitions(-Wall -Wextra)
 
 #===============================================================================
 #= Sources and build

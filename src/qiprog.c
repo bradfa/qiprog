@@ -292,6 +292,8 @@ int open_device(struct qiprog_cfg *conf)
 	struct qiprog_context *ctx;
 	struct qiprog_device **devs;
 
+	(void)conf;
+
 	/* Debug _everything_ */
 	qiprog_set_loglevel(QIPROG_LOG_SPEW);
 

@@ -170,7 +170,6 @@ size_t qiprog_get_device_list(struct qiprog_context *ctx,
 			      struct qiprog_device ***list)
 {
 	size_t i;
-	struct qiprog_device **devs;
 	const struct qiprog_driver *drv;
 	struct dev_list qi_list;
 

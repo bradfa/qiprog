@@ -122,13 +122,14 @@ struct qiprog_device *qiprog_new_device(struct qiprog_context *ctx)
 qiprog_err qiprog_free_device(struct qiprog_device *dev)
 {
 	free(dev);
+	return QIPROG_SUCCESS;
 }
 
 /*
  * Logging helpers:
  */
 /* Log nothing by default */
-static int loglevel = QIPROG_LOG_NONE;
+static enum qiprog_log_level loglevel = QIPROG_LOG_NONE;
 
 /**
  * @ingroup initialization

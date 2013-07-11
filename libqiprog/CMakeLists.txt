@@ -25,6 +25,8 @@
 include_directories(${PKGDEPS_INCLUDE_DIRS}
 	include)
 
+add_definitions(-Wall -Wextra)
+
 # FIXME: This should be configurable as an option, not hardcoded
 add_definitions(-DCONFIG_DRIVER_USB_MASTER=1)
 

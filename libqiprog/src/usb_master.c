@@ -258,7 +258,6 @@ static qiprog_err read_chip_id(struct qiprog_device *dev,
 {
 	int ret, i;
 	uint8_t buf[64];
-	uint16_t wValue, wIndex;
 	struct usb_master_priv *priv;
 	struct qiprog_chip_id *le_ids;
 

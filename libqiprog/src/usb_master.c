@@ -200,7 +200,6 @@ static qiprog_err get_capabilities(struct qiprog_device *dev,
 	int ret, i;
 	uint8_t buf[64];
 	struct usb_master_priv *priv;
-	struct qiprog_capabilities *le_caps;
 
 	if (!dev)
 		return QIPROG_ERR_ARG;
@@ -209,19 +208,18 @@ static qiprog_err get_capabilities(struct qiprog_device *dev,
 
 	ret = libusb_control_transfer(priv->handle, 0xc0,
 				      QIPROG_GET_CAPABILITIES, 0, 0,
-				      (void *)buf, sizeof(*caps), 3000);
+				      (void *)buf, 0x20, 3000);
 	if (ret < LIBUSB_SUCCESS) {
 		qi_err("Control transfer failed: %s", libusb_error_name(ret));
 		return QIPROG_ERR;
 	}
 
 	/* USB is LE, we are host-endian */
-	le_caps = (void *)buf;
-	caps->bus_master = le32_to_h(&(le_caps->bus_master));
-	caps->instruction_set = le16_to_h(&(le_caps->instruction_set));
-	caps->max_direct_data = le32_to_h(&(le_caps->max_direct_data));
+	caps->instruction_set = le16_to_h(buf + 0);
+	caps->bus_master = le32_to_h(buf + 2);
+	caps->max_direct_data = le32_to_h(buf + 6);
 	for (i = 0; i < 10; i++)
-		caps->voltages[i] = le16_to_h(&(le_caps->voltages[i]));
+		caps->voltages[i] = le16_to_h((buf + 10) + (2 * i));
 
 	return QIPROG_SUCCESS;
 }
@@ -267,8 +265,8 @@ static qiprog_err read_chip_id(struct qiprog_device *dev,
 {
 	int ret, i;
 	uint8_t buf[64];
+	uint8_t * base;
 	struct usb_master_priv *priv;
-	struct qiprog_chip_id *le_ids;
 
 	if (!dev)
 		return QIPROG_ERR_ARG;
@@ -277,18 +275,18 @@ static qiprog_err read_chip_id(struct qiprog_device *dev,
 
 	ret = libusb_control_transfer(priv->handle, 0xc0,
 				      QIPROG_READ_DEVICE_ID, 0, 0,
-				      (void *)buf, sizeof(*ids) * 9, 3000);
+				      (void *)buf, 0x3f * 9, 3000);
 	if (ret < LIBUSB_SUCCESS) {
 		qi_err("Control transfer failed: %s", libusb_error_name(ret));
 		return QIPROG_ERR;
 	}
 
 	/* USB is LE, we are host-endian */
-	le_ids = (void *)buf;
 	for (i = 0; i < 9; i++) {
-		ids[i].id_method = le_ids[i].id_method;
-		ids[i].vendor_id = le16_to_h(&(le_ids[i].vendor_id));
-		ids[i].device_id = le32_to_h(&(le_ids[i].device_id));
+		base = buf + (i * 7);
+		ids[i].id_method = *(base + 0);
+		ids[i].vendor_id = le16_to_h(base + 1);
+		ids[i].device_id = le32_to_h(base + 3);
 	}
 
 	return QIPROG_SUCCESS;
@@ -508,7 +506,6 @@ static qiprog_err set_address(struct qiprog_device *dev, uint32_t start,
 	int ret;
 	uint8_t buf[64];
 	struct usb_master_priv *priv;
-	struct qiprog_address *le_addrs;
 
 	if (!dev)
 		return QIPROG_ERR_ARG;
@@ -518,13 +515,12 @@ static qiprog_err set_address(struct qiprog_device *dev, uint32_t start,
 	qi_spew("Setting address range 0x%.8lx -> 0x%.8lx\n", start, end);
 
 	/* USB is LE, we are host-endian */
-	le_addrs = (void *)buf;
-	h_to_le32(start, &(le_addrs->start_address));
-	h_to_le32(end, &(le_addrs->max_address));
+	h_to_le32(start, buf + 0);
+	h_to_le32(end, buf + 4);
 
 	ret = libusb_control_transfer(priv->handle, 0x40,
 				      QIPROG_SET_ADDRESS, 0, 0,
-			              (void *)buf, sizeof(*le_addrs), 3000);
+			              (void *)buf, 0x08, 3000);
 	if (ret < LIBUSB_SUCCESS) {
 		qi_err("Control transfer failed: %s", libusb_error_name(ret));
 		return QIPROG_ERR;

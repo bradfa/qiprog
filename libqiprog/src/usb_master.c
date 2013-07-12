@@ -44,12 +44,21 @@
 #include <stdbool.h>
 #include <string.h>
 
+////#include <stdio.h>
+////#include <sys/time.h>
+
 #define LOG_DOMAIN "usb_host: "
 #define qi_err(str, ...)	qi_perr(LOG_DOMAIN str,  ##__VA_ARGS__)
 #define qi_warn(str, ...)	qi_pwarn(LOG_DOMAIN str, ##__VA_ARGS__)
 #define qi_info(str, ...)	qi_pinfo(LOG_DOMAIN str, ##__VA_ARGS__)
 #define qi_dbg(str, ...)	qi_pdbg(LOG_DOMAIN str,  ##__VA_ARGS__)
 #define qi_spew(str, ...)	qi_pspew(LOG_DOMAIN str, ##__VA_ARGS__)
+
+/*
+ * The maximum number of USB transfers that may be active at any given time
+ * Each device may have at most MAX_CONCURRENT_TRANSFERS during bulk operations.
+ */
+#define MAX_CONCURRENT_TRANSFERS	((unsigned int)32)
 
 struct qiprog_driver qiprog_usb_master_drv;
 
@@ -524,6 +533,208 @@ static qiprog_err set_address(struct qiprog_device *dev, uint32_t start,
 	return QIPROG_SUCCESS;
 }
 
+/*==============================================================================
+ *= Bulk transaction handlers
+ *----------------------------------------------------------------------------*/
+/** Callback data passed to asynchronous USB transfers */
+struct usb_host_cb_data {
+	/** When the transfers were started */
+	double starttime;
+	/** The total number of bytes transferred up until now */
+	volatile uint32_t *transferred_bytes;
+	/** The number of transfers which are still active */
+	volatile uint32_t *active_transfers;
+	/** The total number of transfers needed to complete the transaction */
+	uint32_t total_transfers;
+	/** Queue depth, or maximum number of concurrent transfers */
+	uint32_t queue_depth;
+	/** The sequential number assigned to this transfer */
+	uint32_t transfer_number;
+};
+
+inline double get_time()
+{
+	////struct timespec timer;
+	////clock_gettime(CLOCK_MONOTONIC, &timer);
+	////return (double)timer.tv_sec + (double)(timer.tv_nsec)/1E9;
+	return 0.0;
+}
+
+void async_cb(struct libusb_transfer *transfer)
+{
+	int ret;
+	double endtime, time, avg_speed;
+	struct usb_host_cb_data *cb_data = transfer->user_data;
+	const uint32_t next = cb_data->transfer_number + cb_data->queue_depth;
+
+	/*
+	 * Error handling
+	 */
+	/* A failed transfer can mess up the data, so halt if we meet one */
+	if (transfer->status != LIBUSB_TRANSFER_COMPLETED) {
+		qi_err("Transfer failed: %s",
+		       libusb_error_name(transfer->status));
+		/* FIXME: How to exit elegantly? */
+		ret = QIPROG_ERR;
+	}
+
+	if (transfer->actual_length != transfer->length) {
+		/* FIXME: This can be serious. figure out how to handle */
+		qi_warn("Transfer of %u bytes only brought %u bytes",
+			transfer->length, transfer->actual_length);
+		ret = QIPROG_ERR;
+	}
+
+	/*
+	 * Print timing information
+	 */
+	endtime = get_time();
+	time = endtime - cb_data->starttime;
+	*(cb_data->transferred_bytes) += transfer->actual_length;
+
+	avg_speed = *(cb_data->transferred_bytes) / time;
+	(void)avg_speed;
+
+	////printf("\rSpeed %.1f KiB/s", avg_speed/1024);
+	////fflush(stdout);
+
+	/*
+	 * Resubmit another transfer if needed
+	 */
+	if ((next < cb_data->total_transfers) && (ret == QIPROG_SUCCESS)) {
+		cb_data->transfer_number = next;
+		transfer->buffer += transfer->length * cb_data->queue_depth;
+		if (libusb_submit_transfer(transfer) != LIBUSB_SUCCESS) {
+			qi_err("Failed to resubmit transfer");
+			(*(cb_data->active_transfers))--;
+		}
+	} else {
+		/* Careful how we dereference this one !!! */
+		(*(cb_data->active_transfers))--;
+	}
+}
+
+/*
+ * Despite its name, this function can handle both in and out transactions
+ * equally well. The direction is given by the ep parameter. We don't do
+ * anything to distinguish between IN and OUT transactions.
+ */
+static int do_async_bulkin(libusb_context *usb_ctx,
+			   libusb_device_handle *handle,
+			   unsigned char ep, void *data, uint32_t n)
+{
+	int ret;
+	size_t i;
+	uint8_t *curr_buf;
+	volatile double starttime;
+	volatile uint32_t transferred_bytes;
+	volatile uint32_t active_transfers;
+	struct libusb_transfer *transfers[MAX_CONCURRENT_TRANSFERS];
+	struct usb_host_cb_data cbds[MAX_CONCURRENT_TRANSFERS];
+
+	/* FIXME: Get transaction size from endpoint packet size */
+	const uint32_t transz = 64;
+	const uint32_t total = n / transz;
+	const uint32_t depth = MIN(total , MAX_CONCURRENT_TRANSFERS);
+
+	/*
+	 * Submit initial transfers
+	 * The transfers will re-submit themselves when completed
+	 */
+	qi_info("Starting %i transfers of %i bytes each", total, transz);
+
+	active_transfers = depth;
+	transferred_bytes = 0;
+	starttime = get_time();
+
+	/*
+	 * FIXME: What happens when the last packet is smaller than the endpoint
+	 * size? More precisely, when the caller wants to read less than the
+	 * range indicated in .set_address. The device will send EP-sized
+	 * packets, but we can't just write the last packet to the buffer passed
+	 * by the caller (SEGFAULT). We'll need to buffer the last packet
+	 * somehow.
+	 */
+	for (i = 0; i < depth; i++) {
+		/* FIXME: Handle alloc failures, don't just crash */
+		transfers[i] = libusb_alloc_transfer(0);
+		curr_buf = data + transz * i;
+		cbds[i].starttime = starttime;
+		cbds[i].active_transfers = &active_transfers;
+		cbds[i].transferred_bytes = &transferred_bytes;
+		cbds[i].total_transfers = total;
+		cbds[i].queue_depth = depth;
+		cbds[i].transfer_number = i;
+
+		libusb_fill_bulk_transfer(transfers[i], handle, ep, curr_buf,
+					  transz, async_cb, (void*)&cbds[i],
+					  3000);
+		ret = libusb_submit_transfer(transfers[i]);
+		if (ret != LIBUSB_SUCCESS) {
+			qi_err("Error submitting transfer: %s",
+			       libusb_error_name(ret));
+			/* FIXME: cleanup, don't just exit */
+			return QIPROG_ERR;
+		}
+	}
+
+	/*
+	 * Block until all transfers come back
+	 */
+	while (active_transfers) {
+		ret =  libusb_handle_events(usb_ctx);
+		if (ret != LIBUSB_SUCCESS) {
+			qi_err("Error: %s\n", libusb_error_name(ret));
+			/* FIXME: cleanup, don't just exit */
+			return QIPROG_ERR;
+		}
+	}
+
+	if (transferred_bytes != n) {
+		qi_warn("Only transferred %i bytes of %i bytes",
+			transferred_bytes, n);
+		/* FIXME: cleanup, don't just exit */
+		return QIPROG_ERR;
+	}
+
+	/* FIXME: cleanup, cleanup, cleanup */
+
+	return QIPROG_SUCCESS;
+}
+
+/**
+ * @brief QiProg driver 'readn' member
+ */
+qiprog_err readn(struct qiprog_device *dev, void *dest, uint32_t n)
+{
+	struct usb_master_priv *priv;
+
+
+	if (!dev)
+		return QIPROG_ERR_ARG;
+	if (!dev->ctx)
+		return QIPROG_ERR_ARG;
+	if (!dev->ctx->libusb_host_ctx)
+		return QIPROG_ERR_ARG;
+	if (!(priv = dev->priv))
+		return QIPROG_ERR_ARG;
+
+	return do_async_bulkin(dev->ctx->libusb_host_ctx, priv->handle, 0x81,
+			       dest, n);
+}
+
+/**
+ * @brief QiProg driver 'writen' member
+ */
+qiprog_err writen(struct qiprog_device *dev, void *src, uint32_t n)
+{
+	(void)dev;
+	(void)src;
+	(void)n;
+
+	return QIPROG_ERR;
+}
+
 /**
  * @brief The actual USB host driver structure
  */
@@ -533,13 +744,15 @@ struct qiprog_driver qiprog_usb_master_drv = {
 	.set_bus = set_bus,
 	.get_capabilities = get_capabilities,
 	.read_chip_id = read_chip_id,
-	.set_address = set_address,
 	.read8 = read8,
 	.read16 = read16,
 	.read32 = read32,
 	.write8 = write8,
 	.write16 = write16,
 	.write32 = write32,
+	.set_address = set_address,
+	.readn = readn,
+	.writen = writen,
 };
 
 /** @} */

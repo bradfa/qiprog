@@ -22,9 +22,28 @@
 ## THE SOFTWARE.
 ##
 
-include_directories(${PKGDEPS_INCLUDE_DIRS}
-	include)
+cmake_minimum_required(VERSION 2.8)
 
+project(libqiprog)
+
+include(FindPkgConfig)
+
+#===============================================================================
+#= Dependencies
+#-------------------------------------------------------------------------------
+find_package(PkgConfig)
+pkg_check_modules(PKGDEPS REQUIRED libusb-1.0)
+
+include_directories(${PKGDEPS_INCLUDE_DIRS}
+	include
+)
+
+link_directories(${PKGDEPS_LIBRARY_DIRS})
+
+
+#===============================================================================
+#= Sources and build
+#-------------------------------------------------------------------------------
 add_definitions(-Wall -Wextra)
 
 # FIXME: This should be configurable as an option, not hardcoded
@@ -37,5 +56,12 @@ set(LIBQIPROG_SRCS
 	src/usb_master.c
 )
 
-add_library(libqiprog STATIC
+add_library(${PROJECT_NAME} STATIC
 	${LIBQIPROG_SRCS})
+
+target_link_libraries(${PROJECT_NAME}
+	${PKGDEPS_LIBRARIES}
+)
+
+# CMake, please give us libqiprog, not liblibqiprog
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME qiprog)

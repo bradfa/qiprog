@@ -9,4 +9,4 @@
 *.map
 *.kdev4
 doxy/
-build/
+build*/

@@ -313,6 +313,76 @@ static int stress_test_device(struct qiprog_device *dev)
 }
 
 /*
+ * Bulk read the flash chip into memory
+ */
+static int bulk_read(struct qiprog_device *dev, void *buf, size_t size)
+{
+	/* FIXME: Do not hardcode base address */
+	const uint32_t top = 0xffffffff;
+	const uint32_t base = top - size + 1;
+
+	if (qiprog_set_address(dev, base, top) != QIPROG_SUCCESS) {
+		printf("Failed to set bulk address\n");
+		return EXIT_FAILURE;
+	}
+
+	/* Bulk read may take a while, so get ready for it */
+	printf("Attempting to read flash chip...\n");
+	fflush(stdout);
+
+	/* Do the deed */
+	if (qiprog_readn(dev, buf, size) != QIPROG_SUCCESS) {
+		printf("Failed to bulk read chip\n");
+		return EXIT_FAILURE;
+	}
+
+	return EXIT_SUCCESS;
+}
+
+/*
+ * Read chip to a file
+ */
+static int read_chip(struct qiprog_device *dev, const struct qiprog_cfg *conf)
+{
+	int ret;
+	uint8_t *buf;
+	FILE *file = NULL;
+
+	/* FIXME: Do not hardcode chip size */
+	const uint32_t size = 1024 << 10;
+
+	/* Assume the worst */
+	ret = EXIT_FAILURE;
+
+	if ((buf = malloc(size)) == NULL) {
+		printf("Cannot allocate memory\n");
+		goto cleanup;
+	}
+
+	if ((file = fopen(conf->filename, "w")) == NULL) {
+		printf("Cannot open file \"%s\"\n", conf->filename);
+		goto cleanup;
+	}
+
+	/* Do the deed */
+	if (bulk_read(dev, buf, size) != EXIT_SUCCESS)
+		goto cleanup;
+
+	/* Finish the deed */
+	fwrite(buf, 1, size, file);
+
+	/* All is good */
+	ret = EXIT_SUCCESS;
+
+ cleanup:
+	free(buf);
+	if (file)
+		fclose(file);
+	return ret;
+}
+
+
+/*
  * Open the first QiProg device to come our way.
  */
 int qiprog_run(struct qiprog_cfg *conf)
@@ -363,7 +433,7 @@ int qiprog_run(struct qiprog_cfg *conf)
 		ret = stress_test_device(dev);
 		break;
 	case ACTION_READ:
-		printf("Not implemented\n");
+		read_chip(dev, conf);
 		break;
 	case ACTION_WRITE:
 		printf("Not implemented\n");

@@ -299,10 +299,17 @@ qiprog_err qiprog_handle_control_request(uint8_t bRequest, uint16_t wValue,
 
 	switch (bRequest) {
 	case QIPROG_GET_CAPABILITIES: {
-		struct qiprog_capabilities *caps = (void*) ctrl_buf;
-		ret = qiprog_get_capabilities(qi_dev, caps);
-		*data = (void *)caps;
-		*len = sizeof(*caps);
+		int i;
+		struct qiprog_capabilities caps;
+
+		ret = qiprog_get_capabilities(qi_dev, &caps);
+		h_to_le16(caps.instruction_set, ctrl_buf + 0);
+		h_to_le32(caps.bus_master, ctrl_buf + 2);
+		h_to_le32(caps.max_direct_data, ctrl_buf + 4);
+		for (i = 0; i < 10; i++)
+			h_to_le16(caps.voltages[i], (ctrl_buf + 10) + (2 * i));
+		*data = ctrl_buf;
+		*len = 0x20;
 		break;
 	}
 	case QIPROG_SET_BUS: {
@@ -315,16 +322,26 @@ qiprog_err qiprog_handle_control_request(uint8_t bRequest, uint16_t wValue,
 		/* Not Handled */
 		break;
 	case QIPROG_READ_DEVICE_ID: {
-		struct qiprog_chip_id *ids = (void*) ctrl_buf;
+		int i;
+		uint8_t *base;
+		struct qiprog_chip_id ids[9];
+
 		ret = qiprog_read_chip_id(qi_dev, ids);
-		*data = (void *)ids;
-		*len = sizeof(*ids) * 9;
+		for (i = 0; i < 9; i++) {
+			base = ctrl_buf + (i * 7);
+			*(base + 0) = ids[i].id_method;
+			h_to_le16(ids[i].vendor_id, base + 1);
+			h_to_le32(ids[i].device_id, base + 3);
+		}
+		*data = ctrl_buf;
+		*len = 0x3f;
 		break;
 	}
 	case QIPROG_SET_ADDRESS: {
-		struct qiprog_address *addrs = (void *)*data;
-		ret = qiprog_set_address(qi_dev, addrs->start_address,
-					 addrs->max_address);
+		uint32_t start = le32_to_h(*data + 0);
+		uint32_t end = le32_to_h(*data + 4);
+
+		ret = qiprog_set_address(qi_dev, start, end);
 		break;
 	}
 	case QIPROG_SET_ERASE_SIZE:

@@ -104,7 +104,7 @@ struct qiprog_capabilities {
 	 * exactly 10 voltages.
 	 */
 	uint16_t voltages[10];
-} __attribute__ ((packed));
+};
 
 /**
  * @brief Flash chip identification
@@ -116,7 +116,7 @@ struct qiprog_chip_id {
 	uint16_t vendor_id;
 	/** The product ID */
 	uint32_t device_id;
-} __attribute__ ((packed));
+};
 
 /** Opaque QiProg context */
 struct qiprog_context;

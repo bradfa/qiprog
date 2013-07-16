@@ -379,20 +379,20 @@ qiprog_err qiprog_handle_control_request(uint8_t bRequest, uint16_t wValue,
 	}
 	case QIPROG_WRITE8: {
 		uint32_t addr = (wValue << 16) | wIndex;
-		uint8_t *reg8 = (void*)(*data);
-		ret = qiprog_write8(qi_dev, addr, *reg8);
+		uint8_t reg8 = (*data)[0];
+		ret = qiprog_write8(qi_dev, addr, reg8);
 		break;
 	}
 	case QIPROG_WRITE16: {
 		uint32_t addr = (wValue << 16) | wIndex;
-		uint16_t *reg16 = (void*)(*data);
-		ret = qiprog_write16(qi_dev, addr, *reg16);
+		uint16_t reg16 = le16_to_h(*data);
+		ret = qiprog_write16(qi_dev, addr, reg16);
 		break;
 	}
 	case QIPROG_WRITE32: {
 		uint32_t addr = (wValue << 16) | wIndex;
-		uint32_t *reg32 = (void*)(*data);
-		ret = qiprog_write32(qi_dev, addr, *reg32);
+		uint32_t reg32 = le32_to_h(*data);
+		ret = qiprog_write32(qi_dev, addr, reg32);
 		break;
 	}
 	case QIPROG_SET_VDD:

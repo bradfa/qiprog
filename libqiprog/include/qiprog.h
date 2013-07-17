@@ -107,6 +107,18 @@ struct qiprog_capabilities {
 };
 
 /**
+ * @brief Possible identification methods
+ */
+enum qiprog_id_method {
+	/** No flash chip was identified */
+	QIPROG_ID_INVALID = 0,
+	/** JEDEC-compliant sequence (not CFI) */
+	QIPROG_ID_METH_JEDEC = 0x01,
+	/** Common Flash Interface (CFI) */
+	QIPROG_ID_METH_CFI = 0x02,
+};
+
+/**
  * @brief Flash chip identification
  */
 struct qiprog_chip_id {

@@ -31,7 +31,11 @@ Building
     directory:
 > $ cmake ..
 
-3. Compile:
+3. (Optional) You can fine-tune options with ccmake:
+
+> $ ccmake .
+
+4. Compile:
 > $ make
 
 ### Documentation ###

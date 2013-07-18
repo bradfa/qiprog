@@ -44,8 +44,8 @@
 #include <stdbool.h>
 #include <string.h>
 
-////#include <stdio.h>
-////#include <sys/time.h>
+#include <stdio.h>
+#include <sys/time.h>
 
 #define LOG_DOMAIN "usb_host: "
 #define qi_err(str, ...)	qi_perr(LOG_DOMAIN str,  ##__VA_ARGS__)
@@ -833,9 +833,9 @@ struct usb_host_cb_data {
 
 static inline double get_time()
 {
-	////struct timespec timer;
-	////clock_gettime(CLOCK_MONOTONIC, &timer);
-	////return (double)timer.tv_sec + (double)(timer.tv_nsec)/1E9;
+	struct timespec timer;
+	clock_gettime(CLOCK_MONOTONIC, &timer);
+	return (double)timer.tv_sec + (double)(timer.tv_nsec)/1E9;
 	return 0.0;
 }
 
@@ -875,8 +875,8 @@ static void async_cb(struct libusb_transfer *transfer)
 	avg_speed = *(cb_data->transferred_bytes) / time;
 	(void)avg_speed;
 
-	////printf("\rSpeed %.1f KiB/s", avg_speed/1024);
-	////fflush(stdout);
+	printf("\rSpeed %.1f KiB/s", avg_speed/1024);
+	fflush(stdout);
 
 	/*
 	 * Resubmit another transfer if needed

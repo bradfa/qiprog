@@ -29,6 +29,12 @@ project(libqiprog C)
 include(FindPkgConfig)
 
 #===============================================================================
+#= Configurable options
+#-------------------------------------------------------------------------------
+option(DRIVER_USB_MASTER "Include USB support" ON)
+
+
+#===============================================================================
 #= Dependencies
 #-------------------------------------------------------------------------------
 find_package(PkgConfig)
@@ -46,14 +52,15 @@ link_directories(${PKGDEPS_LIBRARY_DIRS})
 #-------------------------------------------------------------------------------
 add_definitions(-Wall -Wextra)
 
-# FIXME: This should be configurable as an option, not hardcoded
-add_definitions(-DCONFIG_DRIVER_USB_MASTER=1)
+if(DRIVER_USB_MASTER)
+	add_definitions(-DCONFIG_DRIVER_USB_MASTER=1)
+	list(APPEND LIBQIPROG_SRCS src/usb_master.c)
+endif()
 
-set(LIBQIPROG_SRCS
+list(APPEND LIBQIPROG_SRCS
 	src/libqiprog.c
 	src/core.c
 	src/util.c
-	src/usb_master.c
 )
 
 add_library(${PROJECT_NAME} STATIC

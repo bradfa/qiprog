@@ -26,8 +26,6 @@ cmake_minimum_required(VERSION 2.8)
 
 project(libqiprog C)
 
-include(FindPkgConfig)
-
 #===============================================================================
 #= Configurable options
 #-------------------------------------------------------------------------------
@@ -35,15 +33,12 @@ option(DRIVER_USB_MASTER "Include USB support" ON)
 #===============================================================================
 #= Dependencies
 #-------------------------------------------------------------------------------
-find_package(PkgConfig)
-pkg_check_modules(PKGDEPS REQUIRED libusb-1.0)
+find_library(LIBUSB NAMES usb-1.0 usb)
+find_path(LIBUSB_INCLUDE NAMES libusb.h PATH_SUFFIXES libusb-1.0)
 
-include_directories(${PKGDEPS_INCLUDE_DIRS}
+include_directories(${LIBUSB_INCLUDE}
 	include
 )
-
-link_directories(${PKGDEPS_LIBRARY_DIRS})
-
 
 #===============================================================================
 #= Sources and build
@@ -65,7 +60,7 @@ add_library(${PROJECT_NAME} STATIC
 	${LIBQIPROG_SRCS})
 
 target_link_libraries(${PROJECT_NAME}
-	${PKGDEPS_LIBRARIES}
+	${LIBUSB}
 )
 
 # CMake, please give us libqiprog, not liblibqiprog

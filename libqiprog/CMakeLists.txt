@@ -24,7 +24,7 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-project(libqiprog)
+project(libqiprog C)
 
 include(FindPkgConfig)
 

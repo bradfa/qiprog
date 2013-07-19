@@ -31,13 +31,8 @@
 #include <getopt.h>
 #include <qiprog.h>
 
-/* FIXME: move to QiProg API when appropriate */
-#define VULTUREPROG_USB_VID	0x1d50
-#define VULTUREPROG_USB_PID	0x6076
 
 struct qiprog_cfg {
-	uint16_t pid;
-	uint16_t vid;
 };
 
 const char license[] =
@@ -72,14 +67,11 @@ int open_device(struct qiprog_cfg *conf);
 int main(int argc, char *argv[])
 {
 	int option_index = 0;
-	int opt, ret;
-	unsigned int svid = 0, spid = 0;
-	bool has_device = false;
+	int opt;
 	struct qiprog_cfg *config;
 
 	struct option long_options[] = {
 		{"copyright", no_argument, 0, 'c'},
-		{"device", required_argument, 0, 'd'},
 		{0, 0, 0, 0}
 	};
 
@@ -90,7 +82,7 @@ int main(int argc, char *argv[])
 	 * Parse arguments
 	 */
 	while (1) {
-		opt = getopt_long(argc, argv, "cd:",
+		opt = getopt_long(argc, argv, "c",
 				  long_options, &option_index);
 
 		if (opt == EOF)
@@ -101,15 +93,6 @@ int main(int argc, char *argv[])
 			print_copyright();
 			exit(EXIT_SUCCESS);
 			break;
-		case 'd':
-			/* VIP:PID: see if it makes sense */
-			ret = sscanf(optarg, "%x:%x", &svid, &spid);
-			if (ret != 2) {
-				printf("Invalid argument: %s\n", optarg);
-				exit(EXIT_FAILURE);
-			}
-			has_device = true;
-			break;
 		default:
 			break;
 		}
@@ -118,19 +101,6 @@ int main(int argc, char *argv[])
 	/*
 	 * Sanity-check arguments
 	 */
-
-	/* Default to VultureProg VID:PID */
-	if (!has_device) {
-		svid = VULTUREPROG_USB_VID;
-		spid = VULTUREPROG_USB_PID;
-	}
-	if ((svid > 0xffff) || (spid > 0xffff)) {
-		printf("Invalid device %.4x:%.4x\n", svid, spid);
-		exit(EXIT_FAILURE);
-	}
-
-	config->vid = svid;
-	config->pid = spid;
 
 	/*
 	 * At this point, the arguments are sane.

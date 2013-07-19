@@ -52,8 +52,6 @@ Usage
 -----
 
 * -c | --copyright: -- print license and exit
-* -d | --device -- device to use, in the form VID:PID (i.e. c03e:b007)
-    The default is 1d50:6076
 
 
 

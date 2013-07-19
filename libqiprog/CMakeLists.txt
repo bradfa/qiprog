@@ -37,15 +37,10 @@ option(DRIVER_USB_MASTER "Include USB support" ON)
 #===============================================================================
 #= Dependencies
 #-------------------------------------------------------------------------------
-find_package(PkgConfig)
-pkg_check_modules(PKGDEPS REQUIRED libusb-1.0)
-
-include_directories(${PKGDEPS_INCLUDE_DIRS}
-	include
-)
-
-link_directories(${PKGDEPS_LIBRARY_DIRS})
-
+if(DRIVER_USB_MASTER)
+	find_package(PkgConfig)
+	pkg_check_modules(LIBUSB REQUIRED libusb-1.0)
+endif()
 
 #===============================================================================
 #= Sources and build
@@ -55,20 +50,27 @@ add_definitions(-Wall -Wextra)
 if(DRIVER_USB_MASTER)
 	add_definitions(-DCONFIG_DRIVER_USB_MASTER=1)
 	list(APPEND LIBQIPROG_SRCS src/usb_master.c)
+	list(APPEND LIBQIPROG_INCLUDES ${LIBUSB_INCLUDE_DIRS})
+	list(APPEND LIBQIPROG_LIBDIRS ${LIBUSB_LIBRARY_DIRS})
+	list(APPEND LIBQIPROG_LINK_LIBS ${LIBUSB_LIBRARIES})
 endif()
 
+
+list(APPEND LIBQIPROG_INCLUDES include)
+
 list(APPEND LIBQIPROG_SRCS
-	src/libqiprog.c
 	src/core.c
+	src/libqiprog.c
 	src/util.c
 )
+
+include_directories(${LIBQIPROG_INCLUDES})
+link_directories(${LIBQIPROG_LIBDIRS})
 
 add_library(${PROJECT_NAME} STATIC
 	${LIBQIPROG_SRCS})
 
-target_link_libraries(${PROJECT_NAME}
-	${PKGDEPS_LIBRARIES}
-)
+target_link_libraries(${PROJECT_NAME} ${LIBQIPROG_LINK_LIBS})
 
 # CMake, please give us libqiprog, not liblibqiprog
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME qiprog)

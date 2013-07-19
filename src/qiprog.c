@@ -94,6 +94,8 @@ int main(int argc, char *argv[])
 			exit(EXIT_SUCCESS);
 			break;
 		default:
+			/* Invalid option. getopt will have printed something */
+			exit(EXIT_FAILURE);
 			break;
 		}
 	}

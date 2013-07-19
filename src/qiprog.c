@@ -32,7 +32,16 @@
 #include <qiprog.h>
 
 
+enum qi_action {
+	NONE,
+	ACTION_READ,
+	ACTION_WRITE,
+	ACTION_VERIFY,
+};
+
 struct qiprog_cfg {
+	char *filename;
+	enum qi_action action;
 };
 
 const char license[] =
@@ -68,10 +77,14 @@ int main(int argc, char *argv[])
 {
 	int option_index = 0;
 	int opt;
+	bool has_operation = false;
 	struct qiprog_cfg *config;
 
 	struct option long_options[] = {
-		{"copyright", no_argument, 0, 'c'},
+		{"copyright",	no_argument,		0, 'c'},
+		{"read",	required_argument,	0, 'r'},
+		{"write",	required_argument,	0, 'w'},
+		{"verify",	required_argument,	0, 'v'},
 		{0, 0, 0, 0}
 	};
 
@@ -82,7 +95,7 @@ int main(int argc, char *argv[])
 	 * Parse arguments
 	 */
 	while (1) {
-		opt = getopt_long(argc, argv, "c",
+		opt = getopt_long(argc, argv, "cr:w:v:",
 				  long_options, &option_index);
 
 		if (opt == EOF)
@@ -92,6 +105,33 @@ int main(int argc, char *argv[])
 		case 'c':
 			print_copyright();
 			exit(EXIT_SUCCESS);
+			break;
+		case 'r':
+			if (has_operation) {
+				printf("More than one operation specified.\n");
+				exit(EXIT_FAILURE);
+			}
+			has_operation = true;
+			config->filename = strdup(optarg);
+			config->action = ACTION_READ;
+			break;
+		case 'v':
+			if (has_operation) {
+				printf("More than one operation specified.\n");
+				exit(EXIT_FAILURE);
+			}
+			has_operation = true;
+			config->filename = strdup(optarg);
+			config->action = ACTION_VERIFY;
+			break;
+		case 'w':
+			if (has_operation) {
+				printf("More than one operation specified.\n");
+				exit(EXIT_FAILURE);
+			}
+			has_operation = true;
+			config->filename = strdup(optarg);
+			config->action = ACTION_WRITE;
 			break;
 		default:
 			/* Invalid option. getopt will have printed something */

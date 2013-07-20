@@ -362,6 +362,15 @@ int qiprog_run(struct qiprog_cfg *conf)
 	case ACTION_TEST_DEV:
 		ret = stress_test_device(dev);
 		break;
+	case ACTION_READ:
+		printf("Not implemented\n");
+		break;
+	case ACTION_WRITE:
+		printf("Not implemented\n");
+		break;
+	case ACTION_VERIFY:
+		printf("Not implemented\n");
+		break;
 	default:
 		/* Do nothing */
 		break;

@@ -77,7 +77,7 @@ int qiprog_run(struct qiprog_cfg *conf);
 int main(int argc, char *argv[])
 {
 	int option_index = 0;
-	int opt;
+	int opt, ret;
 	bool has_operation = false;
 	struct qiprog_cfg *config;
 
@@ -162,7 +162,15 @@ int main(int argc, char *argv[])
 	       "This is free software, and you are welcome to redistribute it\n"
 	       "under certain conditions; invoke with `-c' for details.\n");
 
-	return qiprog_run(config);
+	/* Do the deed */
+	ret = qiprog_run(config);
+
+	/* Clean up */
+	if (config->filename)
+		free(config->filename);
+	free(config);
+
+	return ret;
 }
 
 /*
@@ -311,22 +319,24 @@ int qiprog_run(struct qiprog_cfg *conf)
 {
 	int ret;
 	size_t ndevs;
-	struct qiprog_context *ctx;
-	struct qiprog_device **devs;
-	struct qiprog_device *dev;
+	struct qiprog_context *ctx = NULL;
+	struct qiprog_device **devs = NULL;
+	struct qiprog_device *dev = NULL;
 
 	/* Debug _everything_ */
 	qiprog_set_loglevel(QIPROG_LOG_SPEW);
 
 	if (qiprog_init(&ctx) != QIPROG_SUCCESS) {
 		printf("libqiprog initialization failure\n");
-		return EXIT_FAILURE;
+		ret = EXIT_FAILURE;
+		goto cleanup;
 	}
 
 	ndevs = qiprog_get_device_list(ctx, &devs);
 	if (!ndevs) {
 		printf("No device found\n");
-		return EXIT_FAILURE;
+		ret = EXIT_FAILURE;
+		goto cleanup;
 	}
 
 	/* Choose the first device for now */
@@ -334,12 +344,17 @@ int qiprog_run(struct qiprog_cfg *conf)
 
 	if (qiprog_open_device(dev) != QIPROG_SUCCESS) {
 		printf("Error opening device\n");
-		return EXIT_FAILURE;
+		ret = EXIT_FAILURE;
+		goto cleanup;
 	}
 
-	if (print_device_info(dev) != EXIT_SUCCESS)
-		return EXIT_FAILURE;
+	if (print_device_info(dev) != EXIT_SUCCESS) {
+		ret = EXIT_FAILURE;
+		goto cleanup;
+	}
 
+	/* Fail unless told otherwise */
+	ret = EXIT_FAILURE;
 	/*
 	 * Dispatch operation
 	 */
@@ -351,6 +366,16 @@ int qiprog_run(struct qiprog_cfg *conf)
 		/* Do nothing */
 		break;
 	}
+
+ cleanup:
+	if (dev) {
+		/* TODO: close device */
+	}
+	if (devs) {
+		/* TODO: clean up device list */
+	}
+	if (ctx)
+		qiprog_exit(ctx);
 
 	return ret;
 }

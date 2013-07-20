@@ -62,7 +62,7 @@ static void print_copyright(void)
 	printf("%s", license);
 }
 
-int open_device(struct qiprog_cfg *conf);
+int qiprog_run(struct qiprog_cfg *conf);
 
 int main(int argc, char *argv[])
 {
@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
 	       "This is free software, and you are welcome to redistribute it\n"
 	       "under certain conditions; invoke with `-c' for details.\n");
 
-	return open_device(config);
+	return qiprog_run(config);
 }
 
 /*
@@ -257,7 +257,7 @@ static int stress_test_device(struct qiprog_device *dev)
 /*
  * Open the first QiProg device to come our way.
  */
-int open_device(struct qiprog_cfg *conf)
+int qiprog_run(struct qiprog_cfg *conf)
 {
 	size_t ndevs;
 	qiprog_err ret;

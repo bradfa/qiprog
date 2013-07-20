@@ -37,6 +37,7 @@ enum qi_action {
 	ACTION_READ,
 	ACTION_WRITE,
 	ACTION_VERIFY,
+	ACTION_TEST_DEV,
 };
 
 struct qiprog_cfg {
@@ -85,6 +86,7 @@ int main(int argc, char *argv[])
 		{"read",	required_argument,	0, 'r'},
 		{"write",	required_argument,	0, 'w'},
 		{"verify",	required_argument,	0, 'v'},
+		{"test",	no_argument,		0, 't'},
 		{0, 0, 0, 0}
 	};
 
@@ -95,7 +97,7 @@ int main(int argc, char *argv[])
 	 * Parse arguments
 	 */
 	while (1) {
-		opt = getopt_long(argc, argv, "cr:w:v:",
+		opt = getopt_long(argc, argv, "cr:w:v:st",
 				  long_options, &option_index);
 
 		if (opt == EOF)
@@ -132,6 +134,14 @@ int main(int argc, char *argv[])
 			has_operation = true;
 			config->filename = strdup(optarg);
 			config->action = ACTION_WRITE;
+			break;
+		case 't':
+			if (has_operation) {
+				printf("More than one operation specified.\n");
+				exit(EXIT_FAILURE);
+			}
+			has_operation = true;
+			config->action = ACTION_TEST_DEV;
 			break;
 		default:
 			/* Invalid option. getopt will have printed something */
@@ -299,17 +309,16 @@ static int stress_test_device(struct qiprog_device *dev)
  */
 int qiprog_run(struct qiprog_cfg *conf)
 {
+	int ret;
 	size_t ndevs;
-	qiprog_err ret;
 	struct qiprog_context *ctx;
 	struct qiprog_device **devs;
-
-	(void)conf;
+	struct qiprog_device *dev;
 
 	/* Debug _everything_ */
 	qiprog_set_loglevel(QIPROG_LOG_SPEW);
 
-	if ((ret = qiprog_init(&ctx)) != QIPROG_SUCCESS) {
+	if (qiprog_init(&ctx) != QIPROG_SUCCESS) {
 		printf("libqiprog initialization failure\n");
 		return EXIT_FAILURE;
 	}
@@ -320,17 +329,28 @@ int qiprog_run(struct qiprog_cfg *conf)
 		return EXIT_FAILURE;
 	}
 
-	ret = qiprog_open_device(devs[0]);
-	if (ret != QIPROG_SUCCESS) {
+	/* Choose the first device for now */
+	dev = devs[0];
+
+	if (qiprog_open_device(dev) != QIPROG_SUCCESS) {
 		printf("Error opening device\n");
 		return EXIT_FAILURE;
 	}
 
-	if (print_device_info(devs[0]) != EXIT_SUCCESS)
+	if (print_device_info(dev) != EXIT_SUCCESS)
 		return EXIT_FAILURE;
 
-	if (stress_test_device(devs[0]) != EXIT_SUCCESS)
-		return EXIT_FAILURE;
+	/*
+	 * Dispatch operation
+	 */
+	switch (conf->action) {
+	case ACTION_TEST_DEV:
+		ret = stress_test_device(dev);
+		break;
+	default:
+		/* Do nothing */
+		break;
+	}
 
-	return EXIT_SUCCESS;
+	return ret;
 }

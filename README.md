@@ -55,6 +55,7 @@ Usage
 * -r | --read <file>		read flash and save to <file>
 * -v | --verify <file>		verify flash against <file>
 * -w | --write <file>		write <file> to flash
+* -t | --test			test basic functionality of device
 
 
 

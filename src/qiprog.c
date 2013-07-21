@@ -381,6 +381,62 @@ static int read_chip(struct qiprog_device *dev, const struct qiprog_cfg *conf)
 	return ret;
 }
 
+/*
+ * Verify contents of chip against file
+ */
+static int verify_chip(struct qiprog_device *dev, const struct qiprog_cfg *conf)
+{
+	int ret;
+	void *buf = NULL, *chip = NULL;
+	FILE *file;
+	size_t size;
+	long int file_size;
+
+	/* Assume the worst */
+	ret = EXIT_FAILURE;
+
+	if ((file = fopen(conf->filename, "r")) == NULL) {
+		printf("Cannot open file \"%s\"\n", conf->filename);
+		goto cleanup;
+	}
+
+	/* Use the file size to tell how much to read */
+	fseek(file, 0L, SEEK_END);
+	if ((file_size = ftell(file)) < 0)
+		goto cleanup;
+	rewind(file);
+
+	size = (size_t) file_size;
+	buf = malloc(size);
+	chip = malloc(size);
+
+	if (buf == NULL || chip == NULL) {
+		printf("Cannot allocate memory\n");
+		goto cleanup;
+	}
+
+	/* Get the file contents */
+	fread(buf, 1, size, file);
+
+	/* Now the chip contents */
+	if (bulk_read(dev, chip, size) != EXIT_SUCCESS)
+		goto cleanup;
+
+	if (memcmp(chip, buf, size))
+		printf("Verification failed. Contents differ.\n");
+	else
+		printf("Match!!!\n");
+
+	/* All is good */
+	ret = EXIT_SUCCESS;
+
+ cleanup:
+	free(buf);
+	free(chip);
+	if (file)
+		fclose(file);
+	return ret;
+}
 
 /*
  * Open the first QiProg device to come our way.
@@ -439,7 +495,7 @@ int qiprog_run(struct qiprog_cfg *conf)
 		printf("Not implemented\n");
 		break;
 	case ACTION_VERIFY:
-		printf("Not implemented\n");
+		verify_chip(dev, conf);
 		break;
 	default:
 		/* Do nothing */

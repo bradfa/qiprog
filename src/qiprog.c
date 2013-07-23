@@ -430,13 +430,10 @@ static int read_chip(struct qiprog_device *dev, const struct qiprog_cfg *conf)
 	uint8_t *buf;
 	FILE *file = NULL;
 
-	/* FIXME: Do not hardcode chip size */
-	const uint32_t size = 1024 << 10;
-
 	/* Assume the worst */
 	ret = EXIT_FAILURE;
 
-	if ((buf = malloc(size)) == NULL) {
+	if ((buf = malloc(conf->chip_size)) == NULL) {
 		printf("Cannot allocate memory\n");
 		goto cleanup;
 	}
@@ -447,11 +444,11 @@ static int read_chip(struct qiprog_device *dev, const struct qiprog_cfg *conf)
 	}
 
 	/* Do the deed */
-	if (bulk_read(dev, buf, size) != EXIT_SUCCESS)
+	if (bulk_read(dev, buf, conf->chip_size) != EXIT_SUCCESS)
 		goto cleanup;
 
 	/* Finish the deed */
-	fwrite(buf, 1, size, file);
+	fwrite(buf, 1, conf->chip_size, file);
 
 	/* All is good */
 	ret = EXIT_SUCCESS;

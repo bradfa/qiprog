@@ -489,6 +489,12 @@ static int verify_chip(struct qiprog_device *dev, const struct qiprog_cfg *conf)
 	rewind(file);
 
 	size = (size_t) file_size;
+	if (size != conf->chip_size) {
+		printf("File size of %lu is different than chip size of %lu\n",
+		       (unsigned long)size, (unsigned long)conf->chip_size);
+		goto cleanup;
+	}
+
 	buf = malloc(size);
 	chip = malloc(size);
 

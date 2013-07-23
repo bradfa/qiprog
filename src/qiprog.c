@@ -32,6 +32,9 @@
 #include <qiprog.h>
 
 
+#define KiB	(1 << 10)
+#define MiB	(1 << 20)
+
 enum qi_action {
 	NONE,
 	ACTION_READ,
@@ -40,9 +43,42 @@ enum qi_action {
 	ACTION_TEST_DEV,
 };
 
+struct flash_chip {
+	uint16_t vendor_id;
+	uint32_t device_id;
+	uint32_t size;
+	const char *name;
+};
+
+/*
+ * This is a minimal, example, list. It is not meant to be comprehensive,
+ * neither in terms of chips, nor in terms of chip parameters it stores.
+ */
+const struct flash_chip const chip_list[] = {
+	{
+		vendor_id: 0xbf,
+		device_id: 0x4c,
+		size: 2 * MiB,
+		name: "SST49LF160C",
+	}, {
+
+		vendor_id: 0xbf,
+		device_id: 0x5b,
+		size: 1 * MiB,
+		name: "SST49LF080A",
+	}, {
+
+		vendor_id: 0,
+		device_id: 0,
+		size: 0,
+		name: "",
+	}
+};
+
 struct qiprog_cfg {
 	char *filename;
 	enum qi_action action;
+	uint32_t chip_size;
 };
 
 const char license[] =
@@ -224,6 +260,52 @@ static int print_device_info(struct qiprog_device *dev)
 		printf("Supported voltage: %imV\n", caps.voltages[i]);
 	}
 	/* Ignore caps.instruction_set and caps.max_direct_data */
+
+	return EXIT_SUCCESS;
+}
+
+/*
+ * Identify the flash chip's properties based on the chip ID
+ */
+static int identify_chip(struct qiprog_device *dev, struct qiprog_cfg *conf)
+{
+	qiprog_err ret;
+	struct qiprog_chip_id ids[9];
+	const struct flash_chip *chip;
+
+	/* Check if a chip is connected */
+	ret = qiprog_read_chip_id(dev, ids);
+	if (ret != QIPROG_SUCCESS) {
+		printf("Error reading IDs of connected chips\n");
+		return EXIT_FAILURE;
+	}
+
+	if (ids[0].id_method == 0) {
+		printf("No flash chip connected to programmer\n");
+		return EXIT_FAILURE;
+	}
+
+	/* Only look at the first identified chip */
+	printf("Identified chip with ID %x:%x\n",
+	       ids[0].vendor_id, ids[0].device_id);
+
+	/* Now check our list of known chips */
+	for (chip = chip_list; chip->size != 0; chip++) {
+		if(ids[0].vendor_id != chip->vendor_id)
+			continue;
+		if(ids[0].device_id != chip->device_id)
+			continue;
+		/* Found it */
+		conf->chip_size = chip->size;
+		printf("Chip is a %s\n", chip->name);
+		break;
+	}
+
+	/* If size is 0, then we do not know enough about this chip */
+	if (conf->chip_size == 0) {
+		printf ("Chip is not supported by this application\n");
+		return EXIT_FAILURE;
+	}
 
 	return EXIT_SUCCESS;
 }
@@ -481,6 +563,12 @@ int qiprog_run(struct qiprog_cfg *conf)
 
 	/* Fail unless told otherwise */
 	ret = EXIT_FAILURE;
+
+	if (identify_chip(dev, conf) != EXIT_SUCCESS) {
+		/* identify_chip() will print an error message */
+		ret = EXIT_FAILURE;
+		goto cleanup;
+	}
 	/*
 	 * Dispatch operation
 	 */

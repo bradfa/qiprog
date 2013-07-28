@@ -42,6 +42,7 @@ add_definitions(-Wall -Wextra)
 #-------------------------------------------------------------------------------
 set(qiprog_SOURCES
 	src/qiprog.c
+	src/tests.c
 )
 
 add_executable(${PROJECT_NAME}

@@ -23,6 +23,8 @@
  *
  */
 
+#include "tests.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -311,90 +313,6 @@ static int identify_chip(struct qiprog_device *dev, struct qiprog_cfg *conf)
 }
 
 /*
- * Call different functions on the device and see if they fail or not
- */
-static int stress_test_device(struct qiprog_device *dev)
-{
-	int i;
-	uint8_t reg8;
-	uint16_t reg16;
-	uint32_t reg32;
-
-	qiprog_err ret;
-	struct qiprog_chip_id ids[9];
-
-	/* Make sure the device can ACK a set_bus command */
-	ret = qiprog_set_bus(dev, QIPROG_BUS_LPC);
-	if (ret != QIPROG_SUCCESS) {
-		printf("Error setting device to LPC bus\n");
-		return EXIT_FAILURE;
-	}
-
-	/* Now check if a chip is connected */
-	ret = qiprog_read_chip_id(dev, ids);
-	if (ret != QIPROG_SUCCESS) {
-		printf("Error setting reading IDs of connected chips\n");
-		return EXIT_FAILURE;
-	}
-
-	for (i = 0; i < 9; i++) {
-		if (ids[i].id_method == 0)
-			break;
-		printf("Identified chip with [manufacturer:product] ID %x:%x\n",
-		       ids[i].vendor_id, ids[i].device_id);
-	}
-
-	/*
-	 * Play around with reading and writing 8/16/32-bit data.
-	 *
-	 * LPC chips like to respond to address 0xffbc0000 with their IDs, so
-	 * use this address for testing purposes.
-	 */
-	ret = qiprog_read8(dev, 0xffbc0000, &reg8);
-	if (ret != QIPROG_SUCCESS) {
-		printf("read8 failure\n");
-		return EXIT_FAILURE;
-	}
-	printf("read8: %.2x\n", reg8);
-	ret = qiprog_read16(dev, 0xffbc0000, &reg16);
-	if (ret != QIPROG_SUCCESS) {
-		printf("read16 failure\n");
-		return EXIT_FAILURE;
-	}
-	printf("read16: %.4x\n", reg16);
-	ret = qiprog_read32(dev, 0xffbc0000, &reg32);
-	if (ret != QIPROG_SUCCESS) {
-		printf("read32 failure\n");
-		return EXIT_FAILURE;
-	}
-	printf("read32: %.8x\n", reg32);
-
-	/*
-	 * Writing all 1s to the end of the address space should be safe. We
-	 * only care if the chip responds to our write requests.
-	 */
-	ret = qiprog_write8(dev, 0xfffffff0, 0xdb);
-	if (ret != QIPROG_SUCCESS) {
-		printf("write8 failure\n");
-		return EXIT_FAILURE;
-	}
-	printf("write8 worked\n");
-	ret = qiprog_write16(dev, 0xfffffff0, 0xd0b1);
-	if (ret != QIPROG_SUCCESS) {
-		printf("write16 failure\n");
-		return EXIT_FAILURE;
-	}
-	printf("write16 worked\n");
-	ret = qiprog_write32(dev, 0xfffffff0, 0x00c0ffee);
-	if (ret != QIPROG_SUCCESS) {
-		printf("write32 failure\n");
-		return EXIT_FAILURE;
-	}
-	printf("write32 worked\n");
-	return EXIT_SUCCESS;
-}
-
-/*
  * Bulk read the flash chip into memory
  */
 static int bulk_read(struct qiprog_device *dev, void *buf, size_t size)
@@ -577,7 +495,7 @@ int qiprog_run(struct qiprog_cfg *conf)
 	 */
 	switch (conf->action) {
 	case ACTION_TEST_DEV:
-		ret = stress_test_device(dev);
+		ret = run_tests(dev);
 		break;
 	case ACTION_READ:
 		read_chip(dev, conf);

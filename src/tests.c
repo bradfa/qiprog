@@ -49,7 +49,7 @@ int stress_test_device(struct qiprog_device *dev)
 	/* Now check if a chip is connected */
 	ret = qiprog_read_chip_id(dev, ids);
 	if (ret != QIPROG_SUCCESS) {
-		printf("Error setting reading IDs of connected chips\n");
+		printf("Error reading IDs of connected chips\n");
 		return EXIT_FAILURE;
 	}
 

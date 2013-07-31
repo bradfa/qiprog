@@ -637,7 +637,8 @@ void async_cb(struct libusb_transfer *transfer)
  */
 static int do_async_bulkin(libusb_context *usb_ctx,
 			   libusb_device_handle *handle,
-			   unsigned char ep, void *data, uint32_t n)
+			   unsigned char ep, uint16_t ep_size,
+			   void *data, uint32_t n)
 {
 	int ret;
 	size_t i;
@@ -648,8 +649,7 @@ static int do_async_bulkin(libusb_context *usb_ctx,
 	struct libusb_transfer *transfers[MAX_CONCURRENT_TRANSFERS];
 	struct usb_host_cb_data cbds[MAX_CONCURRENT_TRANSFERS];
 
-	/* FIXME: Get transaction size from endpoint packet size */
-	const uint32_t transz = 64;
+	const uint32_t transz = ep_size;
 	const uint32_t total = n / transz;
 	const uint32_t depth = MIN(total , MAX_CONCURRENT_TRANSFERS);
 
@@ -736,7 +736,7 @@ qiprog_err readn(struct qiprog_device *dev, void *dest, uint32_t n)
 		return QIPROG_ERR_ARG;
 
 	return do_async_bulkin(dev->ctx->libusb_host_ctx, priv->handle, 0x81,
-			       dest, n);
+			       priv->ep_size_in, dest, n);
 }
 
 /**

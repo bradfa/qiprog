@@ -68,6 +68,8 @@ struct qiprog_driver qiprog_usb_master_drv;
 struct usb_master_priv {
 	libusb_device_handle *handle;
 	libusb_device *usb_dev;
+	uint16_t ep_size_in;
+	uint16_t ep_size_out;
 };
 
 /**
@@ -82,8 +84,9 @@ static struct qiprog_device *new_usb_prog(libusb_device *libusb_dev,
 	 * result, every QiProg device connected via USB shall be named after
 	 * him.
 	 */
+	int ep_in, ep_out;
 	struct qiprog_device *peter_stuge;
-	struct usb_master_priv *priv;
+	struct usb_master_priv *priv = NULL;
 
 	peter_stuge = qiprog_new_device(ctx);
 
@@ -91,9 +94,8 @@ static struct qiprog_device *new_usb_prog(libusb_device *libusb_dev,
 		return NULL;
 
 	if ((priv = malloc(sizeof(*priv))) == NULL) {
-		qiprog_free_device(peter_stuge);
 		qi_warn("Could not allocate memory for device. Aborting");
-		return NULL;
+		goto cleanup;
 	}
 
 	peter_stuge->drv = &qiprog_usb_master_drv;
@@ -101,8 +103,26 @@ static struct qiprog_device *new_usb_prog(libusb_device *libusb_dev,
 	/* Don't create a handle until the device is opened */
 	priv->handle = NULL;
 	peter_stuge->priv = priv;
+	/* Get the maximum packet sizes */
+	ep_in = libusb_get_max_packet_size(libusb_dev, 0x81);
+	ep_out = libusb_get_max_packet_size(libusb_dev, 1);
+
+	if ((ep_in < 0) || (ep_out < 0)) {
+		qi_warn("Could not get endpoint size. Aborting");
+		goto cleanup;
+	}
+
+	priv->ep_size_in = ep_in;
+	priv->ep_size_out = ep_out;
+
+	qi_spew("Max packet size: %i IN, %i OUT", ep_in, ep_out);
 
 	return peter_stuge;
+
+ cleanup:
+	free(priv);
+	qiprog_free_device(peter_stuge);
+	return NULL;
 }
 
 /**

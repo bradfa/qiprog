@@ -70,6 +70,9 @@ struct usb_master_priv {
 	libusb_device *usb_dev;
 	uint16_t ep_size_in;
 	uint16_t ep_size_out;
+	/* Buffer used to store 'leftover' bulk data */
+	uint8_t * buf;
+	size_t buflen;
 };
 
 /**
@@ -97,6 +100,7 @@ static struct qiprog_device *new_usb_prog(libusb_device *libusb_dev,
 		qi_warn("Could not allocate memory for device. Aborting");
 		goto cleanup;
 	}
+	memset(priv, 0, sizeof(*priv));
 
 	peter_stuge->drv = &qiprog_usb_master_drv;
 	priv->usb_dev = libusb_dev;
@@ -117,9 +121,16 @@ static struct qiprog_device *new_usb_prog(libusb_device *libusb_dev,
 
 	qi_spew("Max packet size: %i IN, %i OUT", ep_in, ep_out);
 
+	if ((priv->buf = malloc(MAX(ep_in, ep_out))) == NULL) {
+		qi_warn("Could not allocate memory.");
+		goto cleanup;
+	}
+
 	return peter_stuge;
 
  cleanup:
+	if (priv && priv->buf)
+		free(priv->buf);
 	free(priv);
 	qiprog_free_device(peter_stuge);
 	return NULL;

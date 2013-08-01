@@ -56,22 +56,22 @@ struct flash_chip {
  */
 const struct flash_chip const chip_list[] = {
 	{
-		vendor_id: 0xbf,
-		device_id: 0x4c,
-		size: 2 * MiB,
-		name: "SST49LF160C",
+		.vendor_id = 0xbf,
+		.device_id = 0x4c,
+		.size = 2 * MiB,
+		.name = "SST49LF160C",
 	}, {
 
-		vendor_id: 0xbf,
-		device_id: 0x5b,
-		size: 1 * MiB,
-		name: "SST49LF080A",
+		.vendor_id = 0xbf,
+		.device_id = 0x5b,
+		.size = 1 * MiB,
+		.name = "SST49LF080A",
 	}, {
 
-		vendor_id: 0,
-		device_id: 0,
-		size: 0,
-		name: "",
+		.vendor_id = 0,
+		.device_id = 0,
+		.size = 0,
+		.name = "",
 	}
 };
 

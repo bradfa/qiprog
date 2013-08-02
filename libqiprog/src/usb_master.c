@@ -741,6 +741,7 @@ static int do_async_bulkin(libusb_context *usb_ctx,
  */
 qiprog_err readn(struct qiprog_device *dev, void *dest, uint32_t n)
 {
+	size_t copysz;
 	struct usb_master_priv *priv;
 
 
@@ -752,6 +753,21 @@ qiprog_err readn(struct qiprog_device *dev, void *dest, uint32_t n)
 		return QIPROG_ERR_ARG;
 	if (!(priv = dev->priv))
 		return QIPROG_ERR_ARG;
+
+	/* Write any leftover data from the previous read */
+	if ((copysz = MIN(n, priv->buflen)) != 0) {
+		memcpy(dest, priv->buf, copysz);
+		dest += copysz;
+		n -= copysz;
+		priv->buflen -= copysz;
+
+		/* Keep any remaining data at the top of the buffer */
+		if (priv->buflen) {
+			memmove(priv->buf, priv->buf + copysz, priv->buflen);
+			/* If there's still data in the buffer, we're done */
+			return QIPROG_SUCCESS;
+		}
+	}
 
 	return do_async_bulkin(dev->ctx->libusb_host_ctx, priv->handle, 0x81,
 			       priv->ep_size_in, dest, n);

@@ -545,6 +545,13 @@ static qiprog_err set_address(struct qiprog_device *dev, uint32_t start,
 
 	qi_spew("Setting address range 0x%.8lx -> 0x%.8lx\n", start, end);
 
+	/*
+	 * Contents of the buffer are no longer valid. Device will start to
+	 * read at the new address. We get those contents with the next readn()
+	 * call.
+	 */
+	priv->buflen = 0;
+
 	/* USB is LE, we are host-endian */
 	h_to_le32(start, buf + 0);
 	h_to_le32(end, buf + 4);

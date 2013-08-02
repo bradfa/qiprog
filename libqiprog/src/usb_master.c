@@ -564,6 +564,10 @@ static qiprog_err set_address(struct qiprog_device *dev, uint32_t start,
 		return QIPROG_ERR;
 	}
 
+	/* We have successfully set the address, now keep track of it */
+	dev->curr_addr_range.start_address = start;
+	dev->curr_addr_range.max_address = end;
+
 	return QIPROG_SUCCESS;
 }
 

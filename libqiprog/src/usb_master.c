@@ -548,7 +548,7 @@ struct usb_host_cb_data {
 	uint32_t transfer_number;
 };
 
-inline double get_time()
+static inline double get_time()
 {
 	////struct timespec timer;
 	////clock_gettime(CLOCK_MONOTONIC, &timer);

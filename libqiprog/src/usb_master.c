@@ -676,6 +676,14 @@ static int do_async_bulkin(libusb_context *usb_ctx,
 	const uint32_t depth = MIN(total , MAX_CONCURRENT_TRANSFERS);
 
 	/*
+	 * We transfer in multiples of ep_size. When there is a leftover packet,
+	 * we don't transfer it here, so we may end up with zero transfers for
+	 * small enough transfers.
+	 */
+	if (total == 0)
+		return QIPROG_SUCCESS;
+
+	/*
 	 * Submit initial transfers
 	 * The transfers will re-submit themselves when completed
 	 */

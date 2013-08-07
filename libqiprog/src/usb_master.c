@@ -754,7 +754,7 @@ static int do_async_bulkin(libusb_context *usb_ctx,
 qiprog_err readn(struct qiprog_device *dev, void *dest, uint32_t n)
 {
 	int ret;
-	size_t copysz;
+	size_t copysz, range;
 	struct usb_master_priv *priv;
 
 
@@ -766,6 +766,16 @@ qiprog_err readn(struct qiprog_device *dev, void *dest, uint32_t n)
 		return QIPROG_ERR_ARG;
 	if (!(priv = dev->priv))
 		return QIPROG_ERR_ARG;
+
+	/* See how much the device has left to read */
+	range = dev->curr_addr_range.max_address + 1 -
+		dev->curr_addr_range.start_address;
+	/* Stop if we have been requested to read too much */
+	if (n > (range + priv->buflen)) {
+		qi_err("I can give you %i bytes, but you asked me to read %i",
+		       (int)(range + priv->buflen), (int) n);
+		return QIPROG_ERR_ARG;
+	}
 
 	/* Write any leftover data from the previous read */
 	if ((copysz = MIN(n, priv->buflen)) != 0) {

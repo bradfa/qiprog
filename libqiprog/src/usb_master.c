@@ -792,14 +792,20 @@ qiprog_err readn(struct qiprog_device *dev, void *dest, uint32_t n)
 		}
 	}
 
+	/* Only read in multiples of the endpoint size */
+	range = (n / priv->ep_size_in) * priv->ep_size_in;
+	qi_spew("Reading 0x%.8lx -> 0x%.8lx",
+		dev->curr_addr_range.start_address,
+		dev->curr_addr_range.start_address - 1 + range);
+
 	ret = do_async_bulkin(dev->ctx->libusb_host_ctx, priv->handle, 0x81,
-			      priv->ep_size_in, dest, n);
+			      priv->ep_size_in, dest, range);
 	/* Stop here on any error. async handler will print an error message. */
 	if (ret != QIPROG_SUCCESS)
 		return ret;
 
 	/* Update address range to reflect the previously read bytes */
-	dev->curr_addr_range.start_address += n;
+	dev->curr_addr_range.start_address += range;
 
 	return QIPROG_SUCCESS;
 }

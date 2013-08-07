@@ -753,6 +753,7 @@ static int do_async_bulkin(libusb_context *usb_ctx,
  */
 qiprog_err readn(struct qiprog_device *dev, void *dest, uint32_t n)
 {
+	int ret;
 	size_t copysz;
 	struct usb_master_priv *priv;
 
@@ -781,8 +782,16 @@ qiprog_err readn(struct qiprog_device *dev, void *dest, uint32_t n)
 		}
 	}
 
-	return do_async_bulkin(dev->ctx->libusb_host_ctx, priv->handle, 0x81,
-			       priv->ep_size_in, dest, n);
+	ret = do_async_bulkin(dev->ctx->libusb_host_ctx, priv->handle, 0x81,
+			      priv->ep_size_in, dest, n);
+	/* Stop here on any error. async handler will print an error message. */
+	if (ret != QIPROG_SUCCESS)
+		return ret;
+
+	/* Update address range to reflect the previously read bytes */
+	dev->curr_addr_range.start_address += n;
+
+	return QIPROG_SUCCESS;
 }
 
 /**

@@ -844,11 +844,78 @@ qiprog_err readn(struct qiprog_device *dev, void *dest, uint32_t n)
  */
 qiprog_err writen(struct qiprog_device *dev, void *src, uint32_t n)
 {
-	(void)dev;
-	(void)src;
-	(void)n;
+	int ret, left, len;
+	size_t range;
+	struct usb_master_priv *priv;
 
-	return QIPROG_ERR;
+
+	if (!dev)
+		return QIPROG_ERR_ARG;
+	if (!dev->ctx)
+		return QIPROG_ERR_ARG;
+	if (!dev->ctx->libusb_host_ctx)
+		return QIPROG_ERR_ARG;
+	if (!(priv = dev->priv))
+		return QIPROG_ERR_ARG;
+
+	/* See how much the device has left to read */
+	range = dev->curr_addr_range.max_address + 1 -
+		dev->curr_addr_range.start_address;
+	/* Stop if we have been requested to write too much */
+	if (n > range) {
+		qi_err("I can write %i bytes, but you asked me to write %i",
+		       (int)(range + priv->buflen), (int) n);
+		return QIPROG_ERR_ARG;
+	}
+
+	/* Only program in multiples of the endpoint size */
+	range = (n / priv->ep_size_in) * priv->ep_size_in;
+	qi_spew("Programming 0x%.8lx -> 0x%.8lx",
+		dev->curr_addr_range.start_address,
+		dev->curr_addr_range.start_address - 1 + range);
+
+	ret = do_async_bulk_transfers(dev->ctx->libusb_host_ctx, priv->handle,
+				      0x01, priv->ep_size_in, src, range);
+	/* Stop here on any error. async handler will print an error message. */
+	if (ret != QIPROG_SUCCESS)
+		return ret;
+
+	/* Update address range to reflect the previously programmed bytes */
+	dev->curr_addr_range.start_address += range;
+
+	/*
+	 * Handle leftover transfers
+	 * Unlike bulk reads, we do not need to send endpoint-sized packets, and
+	 * thus the last packet could be smaller than the endpoint size.
+	 * However, we handle leftover packets separately for now.
+	 */
+	left = n % priv->ep_size_in;
+	if (left) {
+		qi_spew("Programming from 0x%.8lx",
+			dev->curr_addr_range.start_address);
+		/*
+		 * Try to read a whole packet. If the device sends less data
+		 * (last packet), we will see that
+		 */
+		ret = libusb_bulk_transfer(priv->handle, 0x01, src + n - left,
+					   left, &len, 3000);
+		if (ret != LIBUSB_SUCCESS) {
+			qi_err("Could not complete transfer: %s",
+			       libusb_error_name(ret));
+			return QIPROG_ERR;
+		}
+
+		/* We should have sent at least 'left' bytes of data */
+		if (len < left) {
+			qi_err("Sent less data than expected.");
+			return QIPROG_ERR;
+		}
+
+		/* Update address range */
+		dev->curr_addr_range.start_address += len;
+	}
+
+	return QIPROG_SUCCESS;
 }
 
 /**

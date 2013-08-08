@@ -753,7 +753,7 @@ static int do_async_bulkin(libusb_context *usb_ctx,
  */
 qiprog_err readn(struct qiprog_device *dev, void *dest, uint32_t n)
 {
-	int ret;
+	int ret, left, len;
 	size_t copysz, range;
 	struct usb_master_priv *priv;
 
@@ -806,6 +806,41 @@ qiprog_err readn(struct qiprog_device *dev, void *dest, uint32_t n)
 
 	/* Update address range to reflect the previously read bytes */
 	dev->curr_addr_range.start_address += range;
+
+	/*
+	 * Handle leftover transfers
+	 */
+	left = n % priv->ep_size_in;
+	if (left) {
+		qi_spew("Reading leftover packet from 0x%.8lx",
+			dev->curr_addr_range.start_address);
+		/*
+		 * Try to read a whole packet. If the device sends less data
+		 * (last packet), we will see that
+		 */
+		ret = libusb_bulk_transfer(priv->handle, 0x81, priv->buf,
+					   priv->ep_size_in, &len, 3000);
+		if (ret != LIBUSB_SUCCESS) {
+			qi_err("Could not complete transfer: %s",
+			       libusb_error_name(ret));
+			return QIPROG_ERR;
+		}
+
+		/* We should get at least 'left' bytes of data */
+		if (len < left) {
+			qi_err("Received less data than expected.");
+			return QIPROG_ERR;
+		}
+
+		/* Update address range to reflect the previously read bytes */
+		dev->curr_addr_range.start_address += len;
+
+		/* Move the data to the user-specified memory region */
+		memcpy(dest + n - left, priv->buf, left);
+		priv->buflen = len - left;
+		/* And copy the rest to the start of our internal buffer */
+		memmove(priv->buf, priv->buf + left, priv->buflen);
+	}
 
 	return QIPROG_SUCCESS;
 }

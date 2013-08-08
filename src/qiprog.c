@@ -379,6 +379,87 @@ static int read_chip(struct qiprog_device *dev, const struct qiprog_cfg *conf)
 }
 
 /*
+ * Bulk write the flash chip
+ */
+static int bulk_write(struct qiprog_device *dev, void *data, size_t size)
+{
+	/* FIXME: Do not hardcode base address */
+	const uint32_t top = 0xffffffff;
+	const uint32_t base = top - size + 1;
+
+	if (qiprog_set_address(dev, base, top) != QIPROG_SUCCESS) {
+		printf("Failed to set bulk address\n");
+		return EXIT_FAILURE;
+	}
+
+	/* Bulk read may take a while, so get ready for it */
+	printf("Attempting to read flash chip...\n");
+	fflush(stdout);
+
+	/* Do the deed */
+	if (qiprog_writen(dev, data, size) != QIPROG_SUCCESS) {
+		printf("Failed to bulk write chip\n");
+		return EXIT_FAILURE;
+	}
+
+	return EXIT_SUCCESS;
+}
+
+/*
+ * Write file contents to chip
+ */
+static int write_chip(struct qiprog_device *dev, const struct qiprog_cfg *conf)
+{
+	int ret;
+	void *buf = NULL;
+	FILE *file;
+	size_t size;
+	long int file_size;
+
+	/* Assume the worst */
+	ret = EXIT_FAILURE;
+
+	if ((file = fopen(conf->filename, "r")) == NULL) {
+		printf("Cannot open file \"%s\"\n", conf->filename);
+		goto cleanup;
+	}
+
+	/* Use the file size to tell how much to read */
+	fseek(file, 0L, SEEK_END);
+	if ((file_size = ftell(file)) < 0)
+		goto cleanup;
+	rewind(file);
+
+	size = (size_t) file_size;
+	if (size != conf->chip_size) {
+		printf("File size of %lu is different than chip size of %lu\n",
+		       (unsigned long)size, (unsigned long)conf->chip_size);
+		goto cleanup;
+	}
+
+	if ((buf = malloc(size)) == NULL) {
+		printf("Cannot allocate memory\n");
+		goto cleanup;
+	}
+
+	/* Get the file contents */
+	fread(buf, 1, size, file);
+
+	/* Now the chip contents */
+	if (bulk_write(dev, buf, size) != EXIT_SUCCESS)
+		goto cleanup;
+
+	/* All is good */
+	ret = EXIT_SUCCESS;
+
+ cleanup:
+	free(buf);
+	if (file)
+		fclose(file);
+	return ret;
+}
+
+/*
  * Verify contents of chip against file
  */
 static int verify_chip(struct qiprog_device *dev, const struct qiprog_cfg *conf)
@@ -501,7 +582,7 @@ int qiprog_run(struct qiprog_cfg *conf)
 		read_chip(dev, conf);
 		break;
 	case ACTION_WRITE:
-		printf("Not implemented\n");
+		write_chip(dev, conf);
 		break;
 	case ACTION_VERIFY:
 		verify_chip(dev, conf);

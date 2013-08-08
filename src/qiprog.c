@@ -579,13 +579,13 @@ int qiprog_run(struct qiprog_cfg *conf)
 		ret = run_tests(dev);
 		break;
 	case ACTION_READ:
-		read_chip(dev, conf);
+		ret = read_chip(dev, conf);
 		break;
 	case ACTION_WRITE:
-		write_chip(dev, conf);
+		ret = write_chip(dev, conf);
 		break;
 	case ACTION_VERIFY:
-		verify_chip(dev, conf);
+		ret = verify_chip(dev, conf);
 		break;
 	default:
 		/* Do nothing */

@@ -653,14 +653,15 @@ void async_cb(struct libusb_transfer *transfer)
 }
 
 /*
- * Despite its name, this function can handle both in and out transactions
- * equally well. The direction is given by the ep parameter. We don't do
- * anything to distinguish between IN and OUT transactions.
+ * This function handles both in and out transactions equally well. The
+ * direction is given by the ep parameter. We do not do anything to distinguish
+ * between IN and OUT transactions, hence why we can use this function for
+ * either case.
  */
-static int do_async_bulkin(libusb_context *usb_ctx,
-			   libusb_device_handle *handle,
-			   unsigned char ep, uint16_t ep_size,
-			   void *data, uint32_t n)
+static int do_async_bulk_transfers(libusb_context *usb_ctx,
+				   libusb_device_handle *handle,
+				   unsigned char ep, uint16_t ep_size,
+				   void *data, uint32_t n)
 {
 	int ret;
 	size_t i;
@@ -791,8 +792,8 @@ qiprog_err readn(struct qiprog_device *dev, void *dest, uint32_t n)
 		dev->curr_addr_range.start_address,
 		dev->curr_addr_range.start_address - 1 + range);
 
-	ret = do_async_bulkin(dev->ctx->libusb_host_ctx, priv->handle, 0x81,
-			      priv->ep_size_in, dest, range);
+	ret = do_async_bulk_transfers(dev->ctx->libusb_host_ctx, priv->handle,
+				      0x81, priv->ep_size_in, dest, range);
 	/* Stop here on any error. async handler will print an error message. */
 	if (ret != QIPROG_SUCCESS)
 		return ret;

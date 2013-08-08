@@ -672,6 +672,7 @@ static int do_async_bulkin(libusb_context *usb_ctx,
 	struct usb_host_cb_data cbds[MAX_CONCURRENT_TRANSFERS];
 
 	const uint32_t transz = ep_size;
+	/* Intentionally round down. Leftover packets are not handled here */
 	const uint32_t total = n / transz;
 	const uint32_t depth = MIN(total , MAX_CONCURRENT_TRANSFERS);
 
@@ -693,14 +694,6 @@ static int do_async_bulkin(libusb_context *usb_ctx,
 	transferred_bytes = 0;
 	starttime = get_time();
 
-	/*
-	 * FIXME: What happens when the last packet is smaller than the endpoint
-	 * size? More precisely, when the caller wants to read less than the
-	 * range indicated in .set_address. The device will send EP-sized
-	 * packets, but we can't just write the last packet to the buffer passed
-	 * by the caller (SEGFAULT). We'll need to buffer the last packet
-	 * somehow.
-	 */
 	for (i = 0; i < depth; i++) {
 		/* FIXME: Handle alloc failures, don't just crash */
 		transfers[i] = libusb_alloc_transfer(0);

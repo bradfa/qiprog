@@ -341,7 +341,8 @@ qiprog_err qiprog_handle_control_request(uint8_t bRequest, uint16_t wValue,
 		uint32_t start = le32_to_h(*data + 0);
 		uint32_t end = le32_to_h(*data + 4);
 
-		ret = qiprog_set_address(qi_dev, start, end);
+		/* set_address() is not in the core, just the driver */
+		ret = qi_dev->drv->set_address(qi_dev, start, end);
 		break;
 	}
 	case QIPROG_SET_ERASE_SIZE:
@@ -555,7 +556,7 @@ void qiprog_handle_events(void)
 	/*
 	 * Now see if there is anything we can read
 	 */
-	start = qi_dev->addr.start;
+	start = qi_dev->addr.pread;
 	end = qi_dev->addr.end;
 	if (start == end)
 		return;
@@ -569,7 +570,7 @@ void qiprog_handle_events(void)
 		return;
 
 	task->len = MIN(len, qi_max_tx_packet);
-	qiprog_readn(qi_dev, task->buf, task->len);
+	qiprog_read(qi_dev, start, task->buf, task->len);
 	task->status = READY_SEND;
 }
 

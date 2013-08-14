@@ -321,17 +321,12 @@ static int bulk_read(struct qiprog_device *dev, void *buf, size_t size)
 	const uint32_t top = 0xffffffff;
 	const uint32_t base = top - size + 1;
 
-	if (qiprog_set_address(dev, base, top) != QIPROG_SUCCESS) {
-		printf("Failed to set bulk address\n");
-		return EXIT_FAILURE;
-	}
-
 	/* Bulk read may take a while, so get ready for it */
 	printf("Attempting to read flash chip...\n");
 	fflush(stdout);
 
 	/* Do the deed */
-	if (qiprog_readn(dev, buf, size) != QIPROG_SUCCESS) {
+	if (qiprog_read(dev, base, buf, size) != QIPROG_SUCCESS) {
 		printf("Failed to bulk read chip\n");
 		return EXIT_FAILURE;
 	}
@@ -387,17 +382,12 @@ static int bulk_write(struct qiprog_device *dev, void *data, size_t size)
 	const uint32_t top = 0xffffffff;
 	const uint32_t base = top - size + 1;
 
-	if (qiprog_set_address(dev, base, top) != QIPROG_SUCCESS) {
-		printf("Failed to set bulk address\n");
-		return EXIT_FAILURE;
-	}
-
 	/* Bulk read may take a while, so get ready for it */
 	printf("Attempting to read flash chip...\n");
 	fflush(stdout);
 
 	/* Do the deed */
-	if (qiprog_writen(dev, data, size) != QIPROG_SUCCESS) {
+	if (qiprog_write(dev, base, data, size) != QIPROG_SUCCESS) {
 		printf("Failed to bulk write chip\n");
 		return EXIT_FAILURE;
 	}

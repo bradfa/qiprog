@@ -66,8 +66,8 @@ struct dev_list {
 };
 
 struct qiprog_address {
-	uint32_t start_address;
-	uint32_t max_address;
+	uint32_t start;
+	uint32_t end;
 };
 
 /*

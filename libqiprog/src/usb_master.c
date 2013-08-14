@@ -565,8 +565,8 @@ static qiprog_err set_address(struct qiprog_device *dev, uint32_t start,
 	}
 
 	/* We have successfully set the address, now keep track of it */
-	dev->curr_addr_range.start_address = start;
-	dev->curr_addr_range.max_address = end;
+	dev->curr_addr_range.start = start;
+	dev->curr_addr_range.end = end;
 
 	return QIPROG_SUCCESS;
 }
@@ -762,8 +762,8 @@ qiprog_err readn(struct qiprog_device *dev, void *dest, uint32_t n)
 		return QIPROG_ERR_ARG;
 
 	/* See how much the device has left to read */
-	range = dev->curr_addr_range.max_address + 1 -
-		dev->curr_addr_range.start_address;
+	range = dev->curr_addr_range.end + 1 -
+		dev->curr_addr_range.start;
 	/* Stop if we have been requested to read too much */
 	if (n > (range + priv->buflen)) {
 		qi_err("I can give you %i bytes, but you asked me to read %i",
@@ -789,8 +789,8 @@ qiprog_err readn(struct qiprog_device *dev, void *dest, uint32_t n)
 	/* Only read in multiples of the endpoint size */
 	range = (n / priv->ep_size_in) * priv->ep_size_in;
 	qi_spew("Reading 0x%.8lx -> 0x%.8lx",
-		dev->curr_addr_range.start_address,
-		dev->curr_addr_range.start_address - 1 + range);
+		dev->curr_addr_range.start,
+		dev->curr_addr_range.start - 1 + range);
 
 	ret = do_async_bulk_transfers(dev->ctx->libusb_host_ctx, priv->handle,
 				      0x81, priv->ep_size_in, dest, range);
@@ -799,7 +799,7 @@ qiprog_err readn(struct qiprog_device *dev, void *dest, uint32_t n)
 		return ret;
 
 	/* Update address range to reflect the previously read bytes */
-	dev->curr_addr_range.start_address += range;
+	dev->curr_addr_range.start += range;
 
 	/*
 	 * Handle leftover transfers
@@ -807,7 +807,7 @@ qiprog_err readn(struct qiprog_device *dev, void *dest, uint32_t n)
 	left = n % priv->ep_size_in;
 	if (left) {
 		qi_spew("Reading leftover packet from 0x%.8lx",
-			dev->curr_addr_range.start_address);
+			dev->curr_addr_range.start);
 		/*
 		 * Try to read a whole packet. If the device sends less data
 		 * (last packet), we will see that
@@ -827,7 +827,7 @@ qiprog_err readn(struct qiprog_device *dev, void *dest, uint32_t n)
 		}
 
 		/* Update address range to reflect the previously read bytes */
-		dev->curr_addr_range.start_address += len;
+		dev->curr_addr_range.start += len;
 
 		/* Move the data to the user-specified memory region */
 		memcpy(dest + n - left, priv->buf, left);
@@ -859,8 +859,8 @@ qiprog_err writen(struct qiprog_device *dev, void *src, uint32_t n)
 		return QIPROG_ERR_ARG;
 
 	/* See how much the device has left to read */
-	range = dev->curr_addr_range.max_address + 1 -
-		dev->curr_addr_range.start_address;
+	range = dev->curr_addr_range.end + 1 -
+		dev->curr_addr_range.start;
 	/* Stop if we have been requested to write too much */
 	if (n > range) {
 		qi_err("I can write %i bytes, but you asked me to write %i",
@@ -871,8 +871,8 @@ qiprog_err writen(struct qiprog_device *dev, void *src, uint32_t n)
 	/* Only program in multiples of the endpoint size */
 	range = (n / priv->ep_size_in) * priv->ep_size_in;
 	qi_spew("Programming 0x%.8lx -> 0x%.8lx",
-		dev->curr_addr_range.start_address,
-		dev->curr_addr_range.start_address - 1 + range);
+		dev->curr_addr_range.start,
+		dev->curr_addr_range.start - 1 + range);
 
 	ret = do_async_bulk_transfers(dev->ctx->libusb_host_ctx, priv->handle,
 				      0x01, priv->ep_size_in, src, range);
@@ -881,7 +881,7 @@ qiprog_err writen(struct qiprog_device *dev, void *src, uint32_t n)
 		return ret;
 
 	/* Update address range to reflect the previously programmed bytes */
-	dev->curr_addr_range.start_address += range;
+	dev->curr_addr_range.start += range;
 
 	/*
 	 * Handle leftover transfers
@@ -892,7 +892,7 @@ qiprog_err writen(struct qiprog_device *dev, void *src, uint32_t n)
 	left = n % priv->ep_size_in;
 	if (left) {
 		qi_spew("Programming from 0x%.8lx",
-			dev->curr_addr_range.start_address);
+			dev->curr_addr_range.start);
 		/*
 		 * Try to read a whole packet. If the device sends less data
 		 * (last packet), we will see that
@@ -912,7 +912,7 @@ qiprog_err writen(struct qiprog_device *dev, void *src, uint32_t n)
 		}
 
 		/* Update address range */
-		dev->curr_addr_range.start_address += len;
+		dev->curr_addr_range.start += len;
 	}
 
 	return QIPROG_SUCCESS;

@@ -555,8 +555,8 @@ void qiprog_handle_events(void)
 	/*
 	 * Now see if there is anything we can read
 	 */
-	start = qi_dev->curr_addr_range.start_address;
-	end = qi_dev->curr_addr_range.max_address;
+	start = qi_dev->curr_addr_range.start;
+	end = qi_dev->curr_addr_range.end;
 	if (start == end)
 		return;
 	len = end - start + 1;

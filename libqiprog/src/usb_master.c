@@ -874,8 +874,23 @@ static qiprog_err write(struct qiprog_device *dev, uint32_t where, void *src,
 	if (!(priv = dev->priv))
 		return QIPROG_ERR_ARG;
 
+	/*
+	 * Avoid a set_address round-trip if our write pointer is where we want
+	 * it to be
+	 * FIXME: What if max address is less than where we want to write to, or
+	 * if we want to write more than the chip size?
+	 */
+	if (dev->addr.pwrite != where) {
+		/* Can not avoid a round trip */
+		ret = set_address(dev, where, where + n);
+		if (ret != QIPROG_SUCCESS) {
+			qi_err("Could not set address range %i", ret);
+			return ret;
+		}
+	}
+
 	/* See how much the device has left to read */
-	range = dev->addr.end + 1 - dev->addr.start;
+	range = dev->addr.end + 1 - dev->addr.pwrite;
 	/* Stop if we have been requested to write too much */
 	if (n > range) {
 		qi_err("I can write %i bytes, but you asked me to write %i",
@@ -885,8 +900,8 @@ static qiprog_err write(struct qiprog_device *dev, uint32_t where, void *src,
 
 	/* Only program in multiples of the endpoint size */
 	range = (n / priv->ep_size_in) * priv->ep_size_in;
-	qi_spew("Programming 0x%.8lx -> 0x%.8lx", dev->addr.start,
-		dev->addr.start - 1 + range);
+	qi_spew("Programming 0x%.8lx -> 0x%.8lx", dev->addr.pwrite,
+		dev->addr.pwrite - 1 + range);
 
 	ret = do_async_bulk_transfers(dev->ctx->libusb_host_ctx, priv->handle,
 				      0x01, priv->ep_size_in, src, range);
@@ -895,7 +910,7 @@ static qiprog_err write(struct qiprog_device *dev, uint32_t where, void *src,
 		return ret;
 
 	/* Update address range to reflect the previously programmed bytes */
-	dev->addr.start += range;
+	dev->addr.pwrite += range;
 
 	/*
 	 * Handle leftover transfers
@@ -905,8 +920,7 @@ static qiprog_err write(struct qiprog_device *dev, uint32_t where, void *src,
 	 */
 	left = n % priv->ep_size_in;
 	if (left) {
-		qi_spew("Programming from 0x%.8lx",
-			dev->addr.start);
+		qi_spew("Programming from 0x%.8lx", dev->addr.pwrite);
 		/*
 		 * Try to read a whole packet. If the device sends less data
 		 * (last packet), we will see that
@@ -926,7 +940,7 @@ static qiprog_err write(struct qiprog_device *dev, uint32_t where, void *src,
 		}
 
 		/* Update address range */
-		dev->addr.start += len;
+		dev->addr.pwrite += len;
 	}
 
 	return QIPROG_SUCCESS;

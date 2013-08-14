@@ -763,8 +763,23 @@ static qiprog_err read(struct qiprog_device *dev, uint32_t where, void *dest,
 	if (!(priv = dev->priv))
 		return QIPROG_ERR_ARG;
 
+	/*
+	 * Avoid a set_address round-trip if our read pointer is where we want
+	 * it to be
+	 * FIXME: What if max address is less than where we want to read to, or
+	 * if we want to read more than the chip size?
+	 */
+	if (dev->addr.pread != where) {
+		/* Can not avoid a round trip */
+		ret = set_address(dev, where, where + n);
+		if (ret != QIPROG_SUCCESS) {
+			qi_err("Could not set address range %i", ret);
+			return ret;
+		}
+	}
+
 	/* See how much the device has left to read */
-	range = dev->addr.end + 1 - dev->addr.start;
+	range = dev->addr.end + 1 - dev->addr.pread;
 	/* Stop if we have been requested to read too much */
 	if (n > (range + priv->buflen)) {
 		qi_err("I can give you %i bytes, but you asked me to read %i",
@@ -789,8 +804,8 @@ static qiprog_err read(struct qiprog_device *dev, uint32_t where, void *dest,
 
 	/* Only read in multiples of the endpoint size */
 	range = (n / priv->ep_size_in) * priv->ep_size_in;
-	qi_spew("Reading 0x%.8lx -> 0x%.8lx", dev->addr.start,
-		dev->addr.start - 1 + range);
+	qi_spew("Reading 0x%.8lx -> 0x%.8lx", dev->addr.pread,
+		dev->addr.pread - 1 + range);
 
 	ret = do_async_bulk_transfers(dev->ctx->libusb_host_ctx, priv->handle,
 				      0x81, priv->ep_size_in, dest, range);
@@ -799,7 +814,7 @@ static qiprog_err read(struct qiprog_device *dev, uint32_t where, void *dest,
 		return ret;
 
 	/* Update address range to reflect the previously read bytes */
-	dev->addr.start += range;
+	dev->addr.pread += range;
 
 	/*
 	 * Handle leftover transfers
@@ -807,7 +822,7 @@ static qiprog_err read(struct qiprog_device *dev, uint32_t where, void *dest,
 	left = n % priv->ep_size_in;
 	if (left) {
 		qi_spew("Reading leftover packet from 0x%.8lx",
-			dev->addr.start);
+			dev->addr.pread);
 		/*
 		 * Try to read a whole packet. If the device sends less data
 		 * (last packet), we will see that
@@ -827,7 +842,7 @@ static qiprog_err read(struct qiprog_device *dev, uint32_t where, void *dest,
 		}
 
 		/* Update address range to reflect the previously read bytes */
-		dev->addr.start += len;
+		dev->addr.pread += len;
 
 		/* Move the data to the user-specified memory region */
 		memcpy(dest + n - left, priv->buf, left);

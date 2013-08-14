@@ -565,8 +565,9 @@ static qiprog_err set_address(struct qiprog_device *dev, uint32_t start,
 	}
 
 	/* We have successfully set the address, now keep track of it */
-	dev->addr.start = start;
 	dev->addr.end = end;
+	/* Read and write pointers are reset when setting a new range */
+	dev->addr.pread = dev->addr.pwrite = dev->addr.start = start;
 
 	return QIPROG_SUCCESS;
 }

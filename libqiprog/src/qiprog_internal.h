@@ -66,8 +66,14 @@ struct dev_list {
 };
 
 struct qiprog_address {
+	/* Start of address range */
 	uint32_t start;
+	/* End of address range */
 	uint32_t end;
+	/* Current location of our read pointer */
+	uint32_t pread;
+	/* Current location of our write pointer */
+	uint32_t pwrite;
 };
 
 /*

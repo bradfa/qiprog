@@ -269,16 +269,18 @@ qiprog_err qiprog_read_chip_id(struct qiprog_device *dev,
 	return dev->drv->read_chip_id(dev, ids);
 }
 
-qiprog_err qiprog_readn(struct qiprog_device *dev, void *dest, uint32_t n)
+qiprog_err qiprog_read(struct qiprog_device *dev, uint32_t where, void *dest,
+		       uint32_t n)
 {
 	QIPROG_RETURN_ON_BAD_DEV(dev);
-	return dev->drv->readn(dev, dest, n);
+	return dev->drv->read(dev, where, dest, n);
 }
 
-qiprog_err qiprog_writen(struct qiprog_device *dev, void *src, uint32_t n)
+qiprog_err qiprog_write(struct qiprog_device *dev, uint32_t where, void *src,
+			uint32_t n)
 {
 	QIPROG_RETURN_ON_BAD_DEV(dev);
-	return dev->drv->writen(dev, src, n);
+	return dev->drv->write(dev, where, src, n);
 }
 
 /* TODO: qiprog_set_erase_size */

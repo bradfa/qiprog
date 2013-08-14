@@ -529,7 +529,7 @@ static qiprog_err write32(struct qiprog_device *dev, uint32_t addr,
 }
 
 /**
- * @brief QiProg driver 'set_address' member
+ * @brief Tell the programmer what address range we want to operate on
  */
 static qiprog_err set_address(struct qiprog_device *dev, uint32_t start,
 			      uint32_t end)
@@ -744,9 +744,10 @@ static int do_async_bulk_transfers(libusb_context *usb_ctx,
 }
 
 /**
- * @brief QiProg driver 'readn' member
+ * @brief QiProg driver 'read' member
  */
-qiprog_err readn(struct qiprog_device *dev, void *dest, uint32_t n)
+qiprog_err read(struct qiprog_device *dev, uint32_t where, void *dest,
+		uint32_t n)
 {
 	int ret, left, len;
 	size_t copysz, range;
@@ -839,9 +840,10 @@ qiprog_err readn(struct qiprog_device *dev, void *dest, uint32_t n)
 }
 
 /**
- * @brief QiProg driver 'writen' member
+ * @brief QiProg driver 'write' member
  */
-qiprog_err writen(struct qiprog_device *dev, void *src, uint32_t n)
+qiprog_err write(struct qiprog_device *dev, uint32_t where, void *src,
+		 uint32_t n)
 {
 	int ret, left, len;
 	size_t range;
@@ -930,8 +932,8 @@ struct qiprog_driver qiprog_usb_master_drv = {
 	.write8 = write8,
 	.write16 = write16,
 	.write32 = write32,
-	.readn = readn,
-	.writen = writen,
+	.read = read,
+	.write = write,
 };
 
 /** @} */

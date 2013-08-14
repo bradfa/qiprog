@@ -161,7 +161,7 @@ static bool is_interesting(libusb_device *dev)
 /**
  * @brief QiProg driver 'scan' member
  */
-qiprog_err scan(struct qiprog_context *ctx, struct dev_list *qi_list)
+static qiprog_err scan(struct qiprog_context *ctx, struct dev_list *qi_list)
 {
 	libusb_device **list;
 	libusb_device *device;
@@ -599,7 +599,7 @@ static inline double get_time()
 	return 0.0;
 }
 
-void async_cb(struct libusb_transfer *transfer)
+static void async_cb(struct libusb_transfer *transfer)
 {
 	int ret;
 	double endtime, time, avg_speed;
@@ -746,8 +746,8 @@ static int do_async_bulk_transfers(libusb_context *usb_ctx,
 /**
  * @brief QiProg driver 'read' member
  */
-qiprog_err read(struct qiprog_device *dev, uint32_t where, void *dest,
-		uint32_t n)
+static qiprog_err read(struct qiprog_device *dev, uint32_t where, void *dest,
+		       uint32_t n)
 {
 	int ret, left, len;
 	size_t copysz, range;
@@ -842,8 +842,8 @@ qiprog_err read(struct qiprog_device *dev, uint32_t where, void *dest,
 /**
  * @brief QiProg driver 'write' member
  */
-qiprog_err write(struct qiprog_device *dev, uint32_t where, void *src,
-		 uint32_t n)
+static qiprog_err write(struct qiprog_device *dev, uint32_t where, void *src,
+			uint32_t n)
 {
 	int ret, left, len;
 	size_t range;

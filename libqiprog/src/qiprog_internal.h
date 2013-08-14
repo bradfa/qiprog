@@ -127,7 +127,7 @@ struct qiprog_device {
 	const char *serial;
 
 	/* Internal address range - Used with set_address() and readn() */
-	struct qiprog_address curr_addr_range;
+	struct qiprog_address addr;
 	/* Underlying driver */
 	struct qiprog_driver *drv;
 	/* Underlying context */

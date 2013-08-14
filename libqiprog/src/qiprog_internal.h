@@ -100,6 +100,7 @@ struct qiprog_driver {
 				uint32_t *clock_khz);
 	qiprog_err(*read_chip_id) (struct qiprog_device *dev,
 				   struct qiprog_chip_id ids[9]);
+	/* set_address is optional, and not exposed through the API */
 	qiprog_err(*set_address) (struct qiprog_device *dev, uint32_t start,
 				  uint32_t end);
 	qiprog_err(*set_erase_size) (struct qiprog_device *dev, ...);

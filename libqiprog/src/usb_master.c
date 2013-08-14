@@ -930,7 +930,6 @@ struct qiprog_driver qiprog_usb_master_drv = {
 	.write8 = write8,
 	.write16 = write16,
 	.write32 = write32,
-	.set_address = set_address,
 	.readn = readn,
 	.writen = writen,
 };

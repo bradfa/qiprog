@@ -224,6 +224,10 @@ qiprog_err qiprog_set_vdd(struct qiprog_device *dev, uint16_t vdd_mv)
  * than the "bad" example above. These operations are useful when bulk reading
  * or bulk programming the flash chip.
  *
+ * @warning
+ * FIXME: set_address has been removed from the API. Update documentation
+ * accordingly.
+ *
  * The address range for an operation must first be specified with
  * @ref qiprog_set_address(). After that, the bulk operation can be started with
  * @ref qiprog_readn(), or @ref qiprog_writen(). The internal address of the
@@ -263,32 +267,6 @@ qiprog_err qiprog_read_chip_id(struct qiprog_device *dev,
 {
 	QIPROG_RETURN_ON_BAD_DEV(dev);
 	return dev->drv->read_chip_id(dev, ids);
-}
-
-/**
- * @brief Set the internal address for bulk operations
- *
- * Set the internal address at which @ref qiprog_readn(), or
- * @ref qiprog_writen() should start accessing data. This address is
- * automatically incremented by 'n' with each operation.
- *
- * @param[in] dev Device to operate on
- * @param[in] start Start address in the chip's memory space
- * @param[in] end End address in the chip's memory space
- *
- * @return QIPROG_SUCCESS on success, or a QIPROG_ERR code otherwise.
- */
-qiprog_err qiprog_set_address(struct qiprog_device *dev, uint32_t start,
-			      uint32_t end)
-{
-	QIPROG_RETURN_ON_BAD_DEV(dev);
-
-	/*
-	 * Don't set dev->curr_addr_range here. Let the device driver decide if
-	 * it should update it or not.
-	 */
-
-	return dev->drv->set_address(dev, start, end);
 }
 
 qiprog_err qiprog_readn(struct qiprog_device *dev, void *dest, uint32_t n)

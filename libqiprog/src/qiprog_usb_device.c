@@ -539,6 +539,24 @@ static void handle_send(void)
 	}
 }
 
+/** @private */
+static void handle_recv(void)
+{
+	uint16_t rxd;
+	struct qiprog_task *task;
+
+	/* We use the third task in the list for receiving and writing data */
+	task = &(task_list.tasks[2]);
+
+	/* Check for incoming data */
+	rxd = qi_read_packet(task->buf, qi_max_rx_packet);
+
+	/* If we got some data, immediately write it */
+	if (rxd) {
+		qiprog_write(qi_dev, qi_dev->addr.pwrite, task->buf, rxd);
+	}
+}
+
 /**
  * @brief QiProg event handler
  */
@@ -552,6 +570,7 @@ void qiprog_handle_events(void)
 		return;
 
 	handle_send();
+	handle_recv();
 
 	/*
 	 * Now see if there is anything we can read

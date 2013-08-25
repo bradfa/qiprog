@@ -455,8 +455,8 @@ static struct qiprog_task *get_free_task(void)
 	int i, dx;
 	struct qiprog_task *task;
 
-	for (i = 0; i < 4; i++) {
-		dx = (i + task_list.task_start) & 3;
+	for (i = 0; i < 2; i++) {
+		dx = (i + task_list.task_start) & 1;
 		task = &(task_list.tasks[dx]);
 		if (task->status == IDLE)
 			return task;
@@ -473,7 +473,7 @@ static struct qiprog_task *get_first_task(void)
 /** @private */
 static void idle_task(struct qiprog_task *task)
 {
-	task_list.task_start = (task_list.task_start + 1) & 3;
+	task_list.task_start = (task_list.task_start + 1) & 1;
 	task->status = IDLE;
 	task->len = 0;
 }

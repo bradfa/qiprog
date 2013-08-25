@@ -149,6 +149,15 @@ A _SET_WRITE_SIZE request is not neccessary, since the write command specified
 by the data here includes information about how many data bytes the command can
 write.
 
+##### qiprog_set_chip_size #####
+
+* bRequest=0x08 QIPROG_SET_CHIP_SIZE
+*  bmRequestType=0x40 (OUT)
+*  wLength=0x04
+*  wIndex=index of the flash chip obtained with qiprog_read_chip_id
+*  # specify the chip size
+*  data: uint32_t with the size of the flash chip
+
 ##### qiprog_set_spi_timing #####
 
 * bRequest=0x20 QIPROG_SET_SPI_TIMING

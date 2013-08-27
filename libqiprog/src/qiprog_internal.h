@@ -106,6 +106,8 @@ struct qiprog_driver {
 	qiprog_err(*set_erase_size) (struct qiprog_device *dev, ...);
 	qiprog_err(*set_erase_command) (struct qiprog_device *dev, ...);
 	qiprog_err(*set_write_command) (struct qiprog_device *dev, ...);
+	qiprog_err (*set_chip_size) (struct qiprog_device *dev,
+				     uint8_t chip_idx, uint32_t size);
 	qiprog_err(*set_spi_timing) (struct qiprog_device *dev,
 				     uint16_t tpu_read_us, uint32_t tces_ns);
 	qiprog_err(*read) (struct qiprog_device *dev, uint32_t where,

@@ -156,6 +156,8 @@ qiprog_err qiprog_write(struct qiprog_device *dev, uint32_t where, void *src,
 /* TODO: qiprog_set_erase_size */
 /* TODO: qiprog_set_erase_command */
 /* TODO: qiprog_set_write_command */
+qiprog_err qiprog_set_chip_size(struct qiprog_device *dev, uint8_t chip_idx,
+				uint32_t size);
 qiprog_err qiprog_set_spi_timing(struct qiprog_device *dev,
 				 uint16_t tpu_read_us, uint32_t tces_ns);
 qiprog_err qiprog_read8(struct qiprog_device *dev, uint32_t addr,

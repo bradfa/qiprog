@@ -286,7 +286,21 @@ qiprog_err qiprog_write(struct qiprog_device *dev, uint32_t where, void *src,
 /* TODO: qiprog_set_erase_size */
 /* TODO: qiprog_set_erase_command */
 /* TODO: qiprog_set_write_command */
-
+/**
+ * @brief Inform the programmer of the size of connected chips
+ *
+ * @param[in] dev Device to operate on
+ * @param[in] chip_idx Index of chip in array returned by @ref read_chip_id
+ * @param[in] size Size of chip in bytes
+ *
+ * @return QIPROG_SUCCESS on success, or a QIPROG_ERR code otherwise.
+ */
+qiprog_err qiprog_set_chip_size(struct qiprog_device *dev, uint8_t chip_idx,
+				uint32_t size)
+{
+	QIPROG_RETURN_ON_BAD_DEV(dev);
+	return dev->drv->set_chip_size(dev, chip_idx, size);
+}
 /**
  * @brief Read a byte from the flash chip
  *

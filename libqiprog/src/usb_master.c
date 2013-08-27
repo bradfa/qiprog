@@ -324,6 +324,39 @@ static qiprog_err read_chip_id(struct qiprog_device *dev,
 }
 
 /**
+ * @brief QiProg driver 'set_chip_size' member
+ */
+static qiprog_err set_chip_size(struct qiprog_device *dev, uint8_t chip_idx,
+				uint32_t size)
+{
+	int ret;
+	uint16_t wIndex;
+	uint8_t buf[64];
+	struct usb_master_priv *priv;
+
+	if (!dev)
+		return QIPROG_ERR_ARG;
+	if (!(priv = dev->priv))
+		return QIPROG_ERR_ARG;
+
+	/* Least significant 16 bits of the QIPROG_BUS_ constant */
+	wIndex = chip_idx;
+
+	/* USB is LE, we are host-endian */
+	h_to_le32(size, buf);
+
+	ret = libusb_control_transfer(priv->handle, 0x40,
+				      QIPROG_SET_CHIP_SIZE, 0, wIndex,
+				      buf, 0x04, 3000);
+	if (ret < LIBUSB_SUCCESS) {
+		qi_err("Control transfer failed: %s", libusb_error_name(ret));
+		return QIPROG_ERR;
+	}
+
+	return QIPROG_SUCCESS;
+}
+
+/**
  * @brief QiProg driver 'read8' member
  *
  * TODO: Try to unify read 8/16/32 into one common function
@@ -955,6 +988,7 @@ struct qiprog_driver qiprog_usb_master_drv = {
 	.set_bus = set_bus,
 	.get_capabilities = get_capabilities,
 	.read_chip_id = read_chip_id,
+	.set_chip_size = set_chip_size,
 	.read8 = read8,
 	.read16 = read16,
 	.read32 = read32,

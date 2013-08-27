@@ -354,6 +354,11 @@ qiprog_err qiprog_handle_control_request(uint8_t bRequest, uint16_t wValue,
 	case QIPROG_SET_WRITE_COMMAND:
 		/* Not Handled */
 		break;
+	case QIPROG_SET_CHIP_SIZE: {
+		uint32_t size = le32_to_h(*data);
+		ret = qiprog_set_chip_size(qi_dev, wIndex, size);
+		break;
+	}
 	case QIPROG_SET_SPI_TIMING:
 		/* Not Handled */
 		break;

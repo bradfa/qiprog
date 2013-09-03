@@ -802,7 +802,7 @@ static qiprog_err read(struct qiprog_device *dev, uint32_t where, void *dest,
 	 * FIXME: What if max address is less than where we want to read to, or
 	 * if we want to read more than the chip size?
 	 */
-	if (dev->addr.pread != where) {
+	if ((dev->addr.pread != where) || (dev->addr.end < (where + n))) {
 		/* Can not avoid a round trip */
 		ret = set_address(dev, where, where + n);
 		if (ret != QIPROG_SUCCESS) {
@@ -838,7 +838,7 @@ static qiprog_err read(struct qiprog_device *dev, uint32_t where, void *dest,
 	/* Only read in multiples of the endpoint size */
 	range = (n / priv->ep_size_in) * priv->ep_size_in;
 	qi_spew("Reading 0x%.8lx -> 0x%.8lx", dev->addr.pread,
-		dev->addr.pread - 1 + range);
+		dev->addr.pread + range - 1);
 
 	ret = do_async_bulk_transfers(dev->ctx->libusb_host_ctx, priv->handle,
 				      0x81, priv->ep_size_in, dest, range);
@@ -913,7 +913,7 @@ static qiprog_err write(struct qiprog_device *dev, uint32_t where, void *src,
 	 * FIXME: What if max address is less than where we want to write to, or
 	 * if we want to write more than the chip size?
 	 */
-	if (dev->addr.pwrite != where) {
+	if (dev->addr.pwrite != where || (dev->addr.end < (where + n))) {
 		/* Can not avoid a round trip */
 		ret = set_address(dev, where, where + n);
 		if (ret != QIPROG_SUCCESS) {

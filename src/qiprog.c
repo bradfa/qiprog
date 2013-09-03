@@ -309,6 +309,9 @@ static int identify_chip(struct qiprog_device *dev, struct qiprog_cfg *conf)
 		return EXIT_FAILURE;
 	}
 
+	/* Tell the programmer the chip size */
+	qiprog_set_chip_size(dev, 0, conf->chip_size);
+
 	return EXIT_SUCCESS;
 }
 
@@ -317,16 +320,12 @@ static int identify_chip(struct qiprog_device *dev, struct qiprog_cfg *conf)
  */
 static int bulk_read(struct qiprog_device *dev, void *buf, size_t size)
 {
-	/* FIXME: Do not hardcode base address */
-	const uint32_t top = 0xffffffff;
-	const uint32_t base = top - size + 1;
-
 	/* Bulk read may take a while, so get ready for it */
 	printf("Attempting to read flash chip...\n");
 	fflush(stdout);
 
 	/* Do the deed */
-	if (qiprog_read(dev, base, buf, size) != QIPROG_SUCCESS) {
+	if (qiprog_read(dev, 0, buf, size) != QIPROG_SUCCESS) {
 		printf("Failed to bulk read chip\n");
 		return EXIT_FAILURE;
 	}
@@ -378,16 +377,12 @@ static int read_chip(struct qiprog_device *dev, const struct qiprog_cfg *conf)
  */
 static int bulk_write(struct qiprog_device *dev, void *data, size_t size)
 {
-	/* FIXME: Do not hardcode base address */
-	const uint32_t top = 0xffffffff;
-	const uint32_t base = top - size + 1;
-
 	/* Bulk read may take a while, so get ready for it */
 	printf("Attempting to read flash chip...\n");
 	fflush(stdout);
 
 	/* Do the deed */
-	if (qiprog_write(dev, base, data, size) != QIPROG_SUCCESS) {
+	if (qiprog_write(dev, 0, data, size) != QIPROG_SUCCESS) {
 		printf("Failed to bulk write chip\n");
 		return EXIT_FAILURE;
 	}

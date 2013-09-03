@@ -60,25 +60,20 @@ int stress_test_device(struct qiprog_device *dev)
 		       ids[i].vendor_id, ids[i].device_id);
 	}
 
-	/*
-	 * Play around with reading and writing 8/16/32-bit data.
-	 *
-	 * LPC chips like to respond to address 0xffbc0000 with their IDs, so
-	 * use this address for testing purposes.
-	 */
-	ret = qiprog_read8(dev, 0xffbc0000, &reg8);
+	/* Play around with reading and writing 8/16/32-bit data. */
+	ret = qiprog_read8(dev, 0, &reg8);
 	if (ret != QIPROG_SUCCESS) {
 		printf("read8 failure\n");
 		return EXIT_FAILURE;
 	}
 	printf("read8: %.2x\n", reg8);
-	ret = qiprog_read16(dev, 0xffbc0000, &reg16);
+	ret = qiprog_read16(dev, 0, &reg16);
 	if (ret != QIPROG_SUCCESS) {
 		printf("read16 failure\n");
 		return EXIT_FAILURE;
 	}
 	printf("read16: %.4x\n", reg16);
-	ret = qiprog_read32(dev, 0xffbc0000, &reg32);
+	ret = qiprog_read32(dev, 0, &reg32);
 	if (ret != QIPROG_SUCCESS) {
 		printf("read32 failure\n");
 		return EXIT_FAILURE;
@@ -89,19 +84,19 @@ int stress_test_device(struct qiprog_device *dev)
 	 * Writing all 1s to the end of the address space should be safe. We
 	 * only care if the chip responds to our write requests.
 	 */
-	ret = qiprog_write8(dev, 0xfffffff0, 0xdb);
+	ret = qiprog_write8(dev, 0, 0xdb);
 	if (ret != QIPROG_SUCCESS) {
 		printf("write8 failure\n");
 		return EXIT_FAILURE;
 	}
 	printf("write8 worked\n");
-	ret = qiprog_write16(dev, 0xfffffff0, 0xd0b1);
+	ret = qiprog_write16(dev, 0, 0xd0b1);
 	if (ret != QIPROG_SUCCESS) {
 		printf("write16 failure\n");
 		return EXIT_FAILURE;
 	}
 	printf("write16 worked\n");
-	ret = qiprog_write32(dev, 0xfffffff0, 0x00c0ffee);
+	ret = qiprog_write32(dev, 0, 0x00c0ffee);
 	if (ret != QIPROG_SUCCESS) {
 		printf("write32 failure\n");
 		return EXIT_FAILURE;

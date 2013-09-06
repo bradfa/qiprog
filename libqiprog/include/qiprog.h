@@ -130,6 +130,34 @@ struct qiprog_chip_id {
 	uint32_t device_id;
 };
 
+/**
+ * @brief Possible erase types for set_erase_size
+ */
+enum qiprog_erase_type {
+	QIPROG_ERASE_TYPE_INVALID = 0,
+	QIPROG_ERASE_TYPE_CHIP = 0x01,
+	QIPROG_ERASE_TYPE_BLOCK = 0x02,
+	QIPROG_ERASE_TYPE_SECTOR = 0x03,
+};
+
+enum qiprog_erase_cmd {
+	QIPROG_ERASE_CMD_INVALID = 0,
+	QIPROG_ERASE_CMD_JEDEC_ISA = 0x01,
+};
+
+enum qiprog_erase_subcmd {
+	QIPROG_ERASE_SUBCMD_DEFAULT = 0,
+};
+
+enum qiprog_write_cmd {
+	QIPROG_WRITE_CMD_INVALID = 0,
+	QIPROG_WRITE_CMD_JEDEC_ISA = 0x01,
+};
+
+enum qiprog_write_subcmd {
+	QIPROG_WRITE_SUBCMD_DEFAULT = 0,
+};
+
 /** Opaque QiProg context */
 struct qiprog_context;
 /** Opaque QiProg device */
@@ -153,9 +181,24 @@ qiprog_err qiprog_read(struct qiprog_device *dev, uint32_t where, void *dest,
 		       uint32_t n);
 qiprog_err qiprog_write(struct qiprog_device *dev, uint32_t where, void *src,
 			uint32_t n);
-/* TODO: qiprog_set_erase_size */
-/* TODO: qiprog_set_erase_command */
-/* TODO: qiprog_set_write_command */
+qiprog_err qiprog_set_erase_size(struct qiprog_device *dev, uint8_t chip_idx,
+				 enum qiprog_erase_type *types, uint32_t *sizes,
+				 size_t num_sizes);
+qiprog_err qiprog_set_erase_command(struct qiprog_device *dev, uint8_t chip_idx,
+				    enum qiprog_erase_cmd cmd,
+				    enum qiprog_erase_subcmd subcmd,
+				    uint16_t flags);
+qiprog_err qiprog_set_custom_erase_command(struct qiprog_device *dev,
+					   uint8_t chip_idx,
+					   uint32_t *addr, uint8_t *data,
+					   size_t num_bytes);
+qiprog_err qiprog_set_write_command(struct qiprog_device *dev, uint8_t chip_idx,
+				    enum qiprog_write_cmd cmd,
+				    enum qiprog_write_subcmd subcmd);
+qiprog_err qiprog_set_custom_write_command(struct qiprog_device *dev,
+					   uint8_t chip_idx,
+					   uint32_t *addr, uint8_t *data,
+					   size_t num_bytes);
 qiprog_err qiprog_set_chip_size(struct qiprog_device *dev, uint8_t chip_idx,
 				uint32_t size);
 qiprog_err qiprog_set_spi_timing(struct qiprog_device *dev,

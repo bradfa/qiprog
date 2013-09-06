@@ -103,9 +103,28 @@ struct qiprog_driver {
 	/* set_address is optional, and not exposed through the API */
 	qiprog_err(*set_address) (struct qiprog_device *dev, uint32_t start,
 				  uint32_t end);
-	qiprog_err(*set_erase_size) (struct qiprog_device *dev, ...);
-	qiprog_err(*set_erase_command) (struct qiprog_device *dev, ...);
-	qiprog_err(*set_write_command) (struct qiprog_device *dev, ...);
+	qiprog_err(*set_erase_size) (struct qiprog_device *dev,
+				     uint8_t chip_idx,
+				     enum qiprog_erase_type *types,
+				     uint32_t *sizes,
+				     size_t num_sizes);
+	qiprog_err(*set_erase_command) (struct qiprog_device *dev,
+					uint8_t chip_idx,
+					enum qiprog_erase_cmd cmd,
+					enum qiprog_erase_subcmd subcmd,
+					uint16_t flags);
+	qiprog_err(*set_custom_erase_command) (struct qiprog_device *dev,
+					       uint8_t chip_idx,
+					       uint32_t *addr, uint8_t *data,
+					       size_t num_bytes);
+	qiprog_err(*set_write_command) (struct qiprog_device *dev,
+					uint8_t chip_idx,
+				        enum qiprog_write_cmd cmd,
+					enum qiprog_write_subcmd subcmd);
+	qiprog_err(*set_custom_write_command) (struct qiprog_device *dev,
+					       uint8_t chip_idx,
+					       uint32_t *addr, uint8_t *data,
+					       size_t num_bytes);
 	qiprog_err (*set_chip_size) (struct qiprog_device *dev,
 				     uint8_t chip_idx, uint32_t size);
 	qiprog_err(*set_spi_timing) (struct qiprog_device *dev,

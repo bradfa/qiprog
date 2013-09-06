@@ -283,9 +283,107 @@ qiprog_err qiprog_write(struct qiprog_device *dev, uint32_t where, void *src,
 	return dev->drv->write(dev, where, src, n);
 }
 
-/* TODO: qiprog_set_erase_size */
-/* TODO: qiprog_set_erase_command */
-/* TODO: qiprog_set_write_command */
+/**
+ * @brief Inform the programmer of the erase geometry of the chip
+ *
+ * @param[in] dev Device to operate on
+ * @param[in] chip_idx Index of chip in array returned by @ref read_chip_id
+ * @param[in] types array of erase type enumerators, @ref qiprog_erase_type
+ * @param[in] sizes array of sizes corresponding to each erase type in 'types'
+ * @param[in] num_sizes the number of elements in the 'types' and 'sizes' arrays
+ *
+ * @return QIPROG_SUCCESS on success, or a QIPROG_ERR code otherwise.
+ */
+qiprog_err qiprog_set_erase_size(struct qiprog_device *dev, uint8_t chip_idx,
+				 enum qiprog_erase_type *types, uint32_t *sizes,
+				 size_t num_sizes)
+{
+	QIPROG_RETURN_ON_BAD_DEV(dev);
+	return dev->drv->set_erase_size(dev, chip_idx, types, sizes, num_sizes);
+}
+
+/**
+ * @brief Instruct the programmer to use a predefined erase sequence
+ *
+ * @param[in] dev Device to operate on
+ * @param[in] chip_idx Index of chip in array returned by @ref read_chip_id
+ * @param[in] cmd predefined command sequence to use for erase operations
+ * @param[in] subcmd predefined subsequence. Use '0' for default.
+ * @param[in] flags TODO @ref TODO
+ *
+ * @return QIPROG_SUCCESS on success, or a QIPROG_ERR code otherwise.
+ */
+qiprog_err qiprog_set_erase_command(struct qiprog_device *dev, uint8_t chip_idx,
+				    enum qiprog_erase_cmd cmd,
+				    enum qiprog_erase_subcmd subcmd,
+				    uint16_t flags)
+{
+	QIPROG_RETURN_ON_BAD_DEV(dev);
+	return dev->drv->set_erase_command(dev, chip_idx, cmd, subcmd, flags);
+}
+
+/**
+ * @brief Instruct the programmer to use a custom erase sequence
+ *
+ * @param[in] dev Device to operate on
+ * @param[in] chip_idx Index of chip in array returned by @ref read_chip_id
+ * @param[in] addr array of addresses to write data when sending commands
+ * @param[in] data array of data to write corresponding to each address in
+ *	 	   'addr'
+ * @param[in] num_bytes the number of elements in the 'addr' and 'data' arrays
+ *
+ * @return QIPROG_SUCCESS on success, or a QIPROG_ERR code otherwise.
+ */
+qiprog_err qiprog_set_custom_erase_command(struct qiprog_device *dev,
+					   uint8_t chip_idx,
+					   uint32_t *addr, uint8_t *data,
+					   size_t num_bytes)
+{
+	QIPROG_RETURN_ON_BAD_DEV(dev);
+	return dev->drv->set_custom_erase_command(dev, chip_idx, addr, data,
+						  num_bytes);
+}
+
+/**
+ * @brief Instruct the programmer to use a predefined write sequence
+ *
+ * @param[in] dev Device to operate on
+ * @param[in] chip_idx Index of chip in array returned by @ref read_chip_id
+ * @param[in] cmd predefined command sequence to use for write operations
+ * @param[in] subcmd predefined subsequence. Use '0' for default.
+ *
+ * @return QIPROG_SUCCESS on success, or a QIPROG_ERR code otherwise.
+ */
+qiprog_err qiprog_set_write_command(struct qiprog_device *dev, uint8_t chip_idx,
+				    enum qiprog_write_cmd cmd,
+				    enum qiprog_write_subcmd subcmd)
+{
+	QIPROG_RETURN_ON_BAD_DEV(dev);
+	return dev->drv->set_write_command(dev, chip_idx, cmd, subcmd);
+}
+
+/**
+ * @brief Instruct the programmer to use a custom write sequence
+ *
+ * @param[in] dev Device to operate on
+ * @param[in] chip_idx Index of chip in array returned by @ref read_chip_id
+ * @param[in] addr array of addresses to write data when sending commands
+ * @param[in] data array of data to write corresponding to each address in
+ *	 	   'addr'
+ * @param[in] num_bytes the number of elements in the 'addr' and 'data' arrays
+ *
+ * @return QIPROG_SUCCESS on success, or a QIPROG_ERR code otherwise.
+ */
+qiprog_err qiprog_set_custom_write_command(struct qiprog_device *dev,
+					   uint8_t chip_idx,
+					   uint32_t *addr, uint8_t *data,
+					   size_t num_bytes)
+{
+	QIPROG_RETURN_ON_BAD_DEV(dev);
+	return dev->drv->set_custom_write_command(dev, chip_idx, addr, data,
+						  num_bytes);
+}
+
 /**
  * @brief Inform the programmer of the size of connected chips
  *

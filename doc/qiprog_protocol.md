@@ -124,26 +124,84 @@ the array contains exactly 9 device ids.
 
 * bRequest=0x05 QIPROG_SET_ERASE_SIZE
 *  bmRequestType=0x40 (OUT)
-*  wLength=TODO
+*  wIndex = chip this applies to, or 0xffff to use same erase size for all chips
+*  wLength=5, 10, 15, .. up to 60
 *  # specify the erase block size
-*  data: TODO! {need efficient representation of eraseblocks in the chip}
+*  data: array of 5-bytes packed struct
+
+	struct {
+		uint8_t type;
+		uint32_t size;
+	}
+
+Where type is defined by:
+
+	enum qiprog_erase_type {
+		QIPROG_ERASE_TYPE_INVALID = 0,
+		QIPROG_ERASE_TYPE_CHIP = 0x01,
+		QIPROG_ERASE_TYPE_BLOCK = 0x02,
+		QIPROG_ERASE_TYPE_SECTOR = 0x03,
+		/* Others reserved for future use */
+	};
+
+When using implicit erase, the programmer is free to choose the erase strategy,
+while explicit erase will use the first erase type (?)(TODO).
 
 ##### qiprog_set_erase_command #####
 
 * bRequest=0x06 QIPROG_SET_ERASE_COMMAND
 *  bmRequestType=0x40 (OUT)
-*  wLength=TODO
+*  wIndex = chip this applies to, or 0xffff to use same erase size for all chips
+*  wLength=4, 9, 14, ... 64
 *  # how to erase one block
-*  data: TODO! {what bytes to send and what to wait for using instruction set}
+*  data: 4-byte header + optional command sequence
+
+	struct header {
+		uint8_t type;
+		uint8_t subtype;
+		uint16_t flags {
+			AUTO_ERASE_BEFORE_WRITE = (1 << 0);
+			/* Others reserved for future use*/
+		};
+	}
+
+	/* Followed by address/data pairs for custom sequences */
+	struct step {
+		uint32_t address;
+		uint8_t data;
+	}
+
+Where type and subtype are defined as:
+
+	enum qiprog_erase_cmd {
+		QIPROG_ERASE_CMD_INVALID = 0,
+		QIPROG_ERASE_CMD_JEDEC_ISA = 0x01,
+		/* Others reserved for future use*/
+	};
+
+	enum qiprog_erase_subcmd {
+		QIPROG_ERASE_SUBCMD_DEFAULT = 0,
+		/* Others reserved for future use*/
+	};
+
+The number of 'step' structs is determined by wLength.
+'type' values of 0 are invalid. 'subtype' values of 0 indicate the default
+strategy for the selected 'type'.
+type and subtype of 0xff indicates a custom command. When type and subtype are
+not 0xff, wLength must be 4. If the device does not recognize the type/subtype
+combination, it should STALL the transaction, then host can retry with custom
+command sequence.
+
+TODO: How do we represent an address/data pair where the address should be the
+address of the block to erase, or other such special cases?
+
 
 ##### qiprog_set_write_command #####
 
 * bRequest=0x07 QIPROG_SET_WRITE_COMMAND
 *  bmRequestType=0x40 (OUT)
-*  wLength=TODO
-*  # how to write one block
-*  data: TODO! {what bytes to send and what to wait for using instruction set,
-    including prelude and postlude!}
+*  wIndex = chip this applies to, or 0xffff to use same erase size for all chips
+*  same format as set_erase_command() ?
 
 A _SET_WRITE_SIZE request is not neccessary, since the write command specified
 by the data here includes information about how many data bytes the command can

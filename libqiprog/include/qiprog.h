@@ -73,6 +73,7 @@ typedef enum qiprog_error {
 	QIPROG_ERR_MALLOC = -2,		/**< Insufficient memory */
 	QIPROG_ERR_ARG = -3,		/**< Illegal argument passed */
 	QIPROG_ERR_TIMEOUT = -4,	/**< Programmer operation timed out */
+	QIPROG_ERR_LARGE_ARG = -5,	/**< Argument too large */
 
 	QIPROG_ERR_CHIP_TIMEOUT = -20,	/**< Flash chip operation timed out */
 	QIPROG_ERR_NO_RESPONSE = -21,	/**< Flash chip did not respond */

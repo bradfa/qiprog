@@ -144,10 +144,12 @@ enum qiprog_erase_type {
 enum qiprog_erase_cmd {
 	QIPROG_ERASE_CMD_INVALID = 0,
 	QIPROG_ERASE_CMD_JEDEC_ISA = 0x01,
+	QIPROG_ERASE_CMD_CUSTOM = 0xff,
 };
 
 enum qiprog_erase_subcmd {
 	QIPROG_ERASE_SUBCMD_DEFAULT = 0,
+	QIPROG_ERASE_SUBCMD_CUSTOM = 0xff,
 };
 
 enum qiprog_write_cmd {

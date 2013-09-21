@@ -730,6 +730,42 @@ static qiprog_err set_custom_erase_command(struct qiprog_device *dev,
 	return QIPROG_SUCCESS;
 }
 
+/**
+ * @brief QiProg driver 'set_write_command' member
+ */
+static qiprog_err set_write_command(struct qiprog_device *dev, uint8_t chip_idx,
+				    enum qiprog_write_cmd cmd,
+				    enum qiprog_write_subcmd subcmd)
+{
+	int ret;
+	uint16_t wIndex;
+	uint8_t buf[64];
+	struct usb_master_priv *priv;
+
+	if (!dev)
+		return QIPROG_ERR_ARG;
+	if (!(priv = dev->priv))
+		return QIPROG_ERR_ARG;
+
+	/* Least significant 16 bits of the QIPROG_BUS_ constant */
+	wIndex = chip_idx;
+
+	/* USB is LE, we are host-endian */
+	buf[0] = (uint8_t)cmd;
+	buf[1] = (uint8_t)subcmd;
+	/* bytes 2,3 ignored (?) TODO! */
+
+	ret = libusb_control_transfer(priv->handle, 0x40,
+				      QIPROG_SET_WRITE_COMMAND, 0, wIndex, buf,
+				      0x04, 3000);
+	if (ret < LIBUSB_SUCCESS) {
+		qi_err("Control transfer failed: %s", libusb_error_name(ret));
+		return QIPROG_ERR;
+	}
+
+	return QIPROG_SUCCESS;
+}
+
 /*==============================================================================
  *= Bulk transaction handlers
  *----------------------------------------------------------------------------*/
@@ -1117,6 +1153,7 @@ struct qiprog_driver qiprog_usb_master_drv = {
 	.set_erase_size = set_erase_size,
 	.set_erase_command = set_erase_command,
 	.set_custom_erase_command = set_custom_erase_command,
+	.set_write_command = set_write_command,
 	.read8 = read8,
 	.read16 = read16,
 	.read32 = read32,

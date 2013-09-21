@@ -155,10 +155,12 @@ enum qiprog_erase_subcmd {
 enum qiprog_write_cmd {
 	QIPROG_WRITE_CMD_INVALID = 0,
 	QIPROG_WRITE_CMD_JEDEC_ISA = 0x01,
+	QIPROG_WRITE_CMD_CUSTOM = 0xff,
 };
 
 enum qiprog_write_subcmd {
 	QIPROG_WRITE_SUBCMD_DEFAULT = 0,
+	QIPROG_WRITE_SUBCMD_CUSTOM = 0xff
 };
 
 /** Opaque QiProg context */

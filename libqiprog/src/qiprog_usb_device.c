@@ -345,15 +345,90 @@ qiprog_err qiprog_handle_control_request(uint8_t bRequest, uint16_t wValue,
 		ret = qi_dev->drv->set_address(qi_dev, start, end);
 		break;
 	}
-	case QIPROG_SET_ERASE_SIZE:
-		/* Not Handled */
+	case QIPROG_SET_ERASE_SIZE: {
+		int i, num_sizes;
+		enum qiprog_erase_type types[12];
+		uint32_t *sizes = (void *)ctrl_buf;
+
+		num_sizes = wLength / 5;
+		/* Can only handle 12 sizes via USB */
+		if(num_sizes > 12)
+			break;
+		for (i = 0; i < num_sizes; i++) {
+			uint8_t *base = *data + i * 5;
+			types[i] = *base;
+			sizes[i] = le32_to_h(base + 1);
+		}
+		ret = qiprog_set_erase_size(qi_dev, wIndex, types, sizes,
+					    num_sizes);
 		break;
-	case QIPROG_SET_ERASE_COMMAND:
-		/* Not Handled */
+	}
+	case QIPROG_SET_ERASE_COMMAND: {
+		int i, num_bytes;
+		uint8_t cmd, subcmd, idat[12];
+		uint16_t flags;
+		uint32_t *addr = (void *)ctrl_buf;
+
+		cmd = (*data)[0];
+		subcmd = (*data)[1];
+		flags = le16_to_h(*data + 2);
+
+		if ((cmd == QIPROG_ERASE_CMD_CUSTOM) &&
+		    (subcmd == QIPROG_ERASE_SUBCMD_CUSTOM)) {
+			/* Custom command sequence */
+			num_bytes = (wLength - 4) / 5;
+			/* Can only handle 12 byte sequence via USB */
+			if(num_bytes > 12)
+				break;
+
+			for (i = 0; i < num_bytes; i++) {
+				uint8_t *base = *data + 4 + i * 5;
+				idat[i] = *base;
+				addr[i] = le32_to_h(base + 1);
+			}
+			ret = qiprog_set_custom_erase_command(qi_dev, wIndex,
+							      addr, idat,
+							      num_bytes);
+		} else {
+			/* Predefined command sequence */
+			ret = qiprog_set_erase_command(qi_dev, wIndex, cmd,
+						       subcmd, flags);
+		}
 		break;
-	case QIPROG_SET_WRITE_COMMAND:
-		/* Not Handled */
+	}
+	case QIPROG_SET_WRITE_COMMAND: {
+		int i, num_bytes;
+		uint8_t cmd, subcmd, idat[12];
+		uint32_t *addr = (void *)ctrl_buf;
+
+		cmd = (*data)[0];
+		subcmd = (*data)[1];
+
+		if ((cmd == QIPROG_WRITE_CMD_CUSTOM) &&
+			(subcmd == QIPROG_WRITE_SUBCMD_CUSTOM)) {
+			/* Custom command sequence */
+			num_bytes = (wLength - 4) / 5;
+			/* Can only handle 12 byte sequence via USB */
+			if(num_bytes > 12)
+				break;
+
+			for (i = 0; i < num_bytes; i++) {
+				uint8_t *base = *data + 4 + i * 5;
+				idat[i] = *base;
+				addr[i] = le32_to_h(base + 1);
+
+			}
+			ret = qiprog_set_custom_write_command(qi_dev, wIndex,
+							      addr, idat,
+							      num_bytes);
+
+		} else {
+			/* Predefined command sequence */
+			ret = qiprog_set_write_command(qi_dev, wIndex, cmd,
+						       subcmd);
+		}
 		break;
+	}
 	case QIPROG_SET_CHIP_SIZE: {
 		uint32_t size = le32_to_h(*data);
 		ret = qiprog_set_chip_size(qi_dev, wIndex, size);

@@ -152,6 +152,10 @@ enum qiprog_erase_subcmd {
 	QIPROG_ERASE_SUBCMD_CUSTOM = 0xff,
 };
 
+enum qiprog_erase_flags {
+	QIPROG_ERASE_BEFORE_WRITE = (1 << 0),
+};
+
 enum qiprog_write_cmd {
 	QIPROG_WRITE_CMD_INVALID = 0,
 	QIPROG_WRITE_CMD_JEDEC_ISA = 0x01,

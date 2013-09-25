@@ -50,6 +50,10 @@ struct flash_chip {
 	uint32_t device_id;
 	uint32_t size;
 	const char *name;
+	uint8_t erase_cmd;
+	uint8_t erase_type;
+	uint32_t erase_size;
+	uint8_t write_cmd;
 };
 
 /*
@@ -62,18 +66,30 @@ const struct flash_chip const chip_list[] = {
 		.device_id = 0x4c,
 		.size = 2 * MiB,
 		.name = "SST49LF160C",
+		.erase_cmd = QIPROG_ERASE_CMD_JEDEC_ISA,
+		.erase_type = QIPROG_ERASE_TYPE_SECTOR,
+		.erase_size = 4 * KiB,
+		.write_cmd = QIPROG_WRITE_CMD_JEDEC_ISA,
 	}, {
 
 		.vendor_id = 0xbf,
 		.device_id = 0x5b,
 		.size = 1 * MiB,
 		.name = "SST49LF080A",
+		.erase_cmd = QIPROG_ERASE_CMD_JEDEC_ISA,
+		.erase_type = QIPROG_ERASE_TYPE_SECTOR,
+		.erase_size = 4 * KiB,
+		.write_cmd = QIPROG_WRITE_CMD_JEDEC_ISA,
 	}, {
 
 		.vendor_id = 0,
 		.device_id = 0,
 		.size = 0,
 		.name = "",
+		.erase_cmd = 0,
+		.erase_type = 0,
+		.erase_size = 0,
+		.write_cmd = 0,
 	}
 };
 

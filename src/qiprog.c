@@ -328,6 +328,18 @@ static int identify_chip(struct qiprog_device *dev, struct qiprog_cfg *conf)
 	/* Tell the programmer the chip size */
 	qiprog_set_chip_size(dev, 0, conf->chip_size);
 
+	/* Set erase/write parameters */
+	enum qiprog_erase_type erase = chip->erase_type;
+	uint32_t erase_size = chip->erase_size;
+	qiprog_set_erase_size(dev, 0, &erase, &erase_size, 1);
+
+	qiprog_set_erase_command(dev, 0, chip->erase_cmd,
+				 QIPROG_ERASE_SUBCMD_DEFAULT,
+				 QIPROG_ERASE_BEFORE_WRITE);
+
+	qiprog_set_write_command(dev, 0, chip->write_cmd,
+				 QIPROG_WRITE_SUBCMD_DEFAULT);
+
 	return EXIT_SUCCESS;
 }
 

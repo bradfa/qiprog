@@ -170,7 +170,7 @@ static qiprog_err scan(struct qiprog_context *ctx, struct dev_list *qi_list)
 	ssize_t i;
 
 	/* Discover devices */
-	cnt = libusb_get_device_list(NULL, &list);
+	cnt = libusb_get_device_list(ctx->libusb_host_ctx, &list);
 
 	/* Not finding any devices is not an error */
 	if (cnt < 0)

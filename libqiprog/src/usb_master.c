@@ -849,6 +849,7 @@ static void async_cb(struct libusb_transfer *transfer)
 	/*
 	 * Error handling
 	 */
+	ret = QIPROG_SUCCESS;
 	/* A failed transfer can mess up the data, so halt if we meet one */
 	if (transfer->status != LIBUSB_TRANSFER_COMPLETED) {
 		qi_err("Transfer failed: %s",

@@ -406,7 +406,7 @@ static int read_chip(struct qiprog_device *dev, const struct qiprog_cfg *conf)
 static int bulk_write(struct qiprog_device *dev, void *data, size_t size)
 {
 	/* Bulk read may take a while, so get ready for it */
-	printf("Attempting to read flash chip...\n");
+	printf("Attempting to write flash chip...\n");
 	fflush(stdout);
 
 	/* Do the deed */

@@ -82,6 +82,16 @@ const struct flash_chip const chip_list[] = {
 		.write_cmd = QIPROG_WRITE_CMD_JEDEC_ISA,
 	}, {
 
+		.vendor_id = 0xbf,
+		.device_id = 0x50,
+		.size = 512 * KiB,
+		.name = "SST49LF040B",
+		.erase_cmd = QIPROG_ERASE_CMD_JEDEC_ISA,
+		.erase_type = QIPROG_ERASE_TYPE_SECTOR,
+		.erase_size = 4 * KiB,
+		.write_cmd = QIPROG_WRITE_CMD_JEDEC_ISA,
+	}, {
+
 		.vendor_id = 0,
 		.device_id = 0,
 		.size = 0,

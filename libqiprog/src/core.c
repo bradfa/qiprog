@@ -177,7 +177,7 @@ qiprog_err qiprog_set_vdd(struct qiprog_device *dev, uint16_t vdd_mv)
  * Once a device has been successfully opened, and configured to a specific bus,
  * it is ready to communicate with attached flash chips.
  *
- * There are two mechanism for performing chio IO:
+ * There are two mechanism for performing chip IO:
  *
  *
  * @section fine_io Fine-grained mechanism
@@ -190,12 +190,19 @@ qiprog_err qiprog_set_vdd(struct qiprog_device *dev, uint16_t vdd_mv)
  *
  * These functions provide a convenient way to integrate QiProg functionality
  * into existing software, however they are limited by the latencies of
- * communicating with the QiProg device. For reading or writing to a device, it
- * is recommended to use the @ref bulk_io.
+ * communicating with the QiProg device. For reading or programming the storage
+ * array of a device, it is recommended to use the @ref bulk_io.
  *
  * The fine-grained mechanism is intended for delicate situations, where a
  * specific, non-standard sequence is required to put the chip in the desired
- * mode, or performed the desired operation.
+ * mode, or performed the desired operation, such as unlocking sectors or
+ * disabling write protection
+ *
+ * @note
+ * The fine-grained functions IO functions do NOT trigger array-read or array-
+ * program operations. Instead they trigger atomic read or write cycles on the
+ * flash chip's bus. They take an absolute address as a parameter, which is the
+ * address on which the bus cycle will be performed.
  *
  * For example, to erase a sector on fictional "blackbox" chips:
  * @code{.c}
@@ -206,7 +213,8 @@ qiprog_err qiprog_set_vdd(struct qiprog_device *dev, uint16_t vdd_mv)
  *
  * @warning
  * Avoid using fine-grained IO for bulk operations. Do not try to read or write
- * the chip with this mechanism, as it it slow and inefficient.
+ * the chip with this mechanism, as it it slow and inefficient, and there is no
+ * guarantee that a bus read translates 1:1 into an array read operation.
  * @code{.c}
  *	// This is inefficient and slow
  *	for (i = start_addr; i < start_addr + chip_size; i++) {
@@ -221,35 +229,35 @@ qiprog_err qiprog_set_vdd(struct qiprog_device *dev, uint16_t vdd_mv)
  * For operations which transport large amounts of data, it is preferable to do
  * so with one or a few bulk operations. Bulk operations are optimized for
  * transferring large amounts of data at a time, and are considerably faster
- * than the "bad" example above. These operations are useful when bulk reading
- * or bulk programming the flash chip.
+ * than the "bad" example above. These operations are designed for accessing the
+ * storage array of the flash chip, and are useful when bulk reading or bulk
+ * programming the flash chip.
  *
- * @warning
- * FIXME: set_address has been removed from the API. Update documentation
- * accordingly.
- *
- * The address range for an operation must first be specified with
- * @ref qiprog_set_address(). After that, the bulk operation can be started with
- * @ref qiprog_readn(), or @ref qiprog_writen(). The internal address of the
- * device is automatically incremented with every operation. There is no need
- * to call @ref qiprog_set_address() if performing successive bulk operations
- * on a linear memory space.
+ * The bulk operation can be started with @ref qiprog_read(), or
+ * @ref qiprog_write(). Unlike the @ref fine_io, these functions take an
+ * addresses relative to the start of the array contents of the chip. For
+ * example a 256 KiB flash part would be accessed by relative addresses from
+ * 0x0 to 0x40000.
+ * Also, unlike the case of the @ref fine_io, the hardware takes care of mapping
+ * @ref qiprog_read() calls to array read operations and @ref qiprog_write() to
+ * array program operations. For these to work, after chip identification, the
+ * hardware must be told the size of the array via a @ref qiprog_set_chip_size()
+ * call.
  *
  * For example:
  * @code{.c}
  *	// Read the secret number
- *	qiprog_set_address(dev, secret_number_addr, secret_number_addr + 0x100);
- *	qiprog_readn(dev, secret, 64);
+ *	qiprog_read(dev, secret_loc, secret, 64);
  *	// If this is a version 2.0 secret, read the rest of it
  *	if (is_long_secret(secret))
- *		qiprog_readn(dev, secret + 64, 64);
+ *		qiprog_read(dev, secret_loc + 64, secret +64, 64);
  * @endcode
  *
  * It is also possible to read the entire contents of the chip in one pass:
  * @code{.c}
  *	// Now that we know what chip we are dealing with, read it
- *	qiprog_set_address(dev, start_addr, start_addr + chip_size);
- *	qiprog_readn(dev, &contents, chip_size);
+ *	qiprog_set_chip_size(dev, 0, chip_size);
+ *	qiprog_read(dev, 0, &contents, chip_size)
  * @endcode
  */
 /** @{ */
@@ -269,6 +277,16 @@ qiprog_err qiprog_read_chip_id(struct qiprog_device *dev,
 	return dev->drv->read_chip_id(dev, ids);
 }
 
+/**
+ * @brief Read array contents of given flash chip
+ *
+ * @param[in] dev Device to operate on
+ * @param[in] where Relative address from where to read
+ * @param[out] dest Pointer to location where to store contents
+ * @param[in] n Number of bytes to program
+ *
+ * @return QIPROG_SUCCESS on success, or a QIPROG_ERR code otherwise.
+ */
 qiprog_err qiprog_read(struct qiprog_device *dev, uint32_t where, void *dest,
 		       uint32_t n)
 {
@@ -276,6 +294,16 @@ qiprog_err qiprog_read(struct qiprog_device *dev, uint32_t where, void *dest,
 	return dev->drv->read(dev, where, dest, n);
 }
 
+/**
+ * @brief Program array contents of given flash chip
+ *
+ * @param[in] dev Device to operate on
+ * @param[in] where Relative address where to start programming
+ * @param[in] src Pointer to contents that should be written
+ * @param[in] n Number of bytes to program
+ *
+ * @return QIPROG_SUCCESS on success, or a QIPROG_ERR code otherwise.
+ */
 qiprog_err qiprog_write(struct qiprog_device *dev, uint32_t where, void *src,
 			uint32_t n)
 {

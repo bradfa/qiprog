@@ -564,6 +564,7 @@ static void idle_task(struct qiprog_task *task)
 /** @cond private */
 static qiprog_packet_io_cb qi_read_packet = NULL;
 static qiprog_packet_io_cb qi_write_packet = NULL;
+static qiprog_poll_cb qi_poll_in_token = NULL;
 static uint16_t qi_max_rx_packet = 0;
 static uint16_t qi_max_tx_packet = 0;
 static uint8_t *qi_bulk_buf = NULL;
@@ -574,6 +575,7 @@ static uint8_t *qi_bulk_buf = NULL;
  */
 qiprog_err qiprog_usb_dev_init(qiprog_packet_io_cb send_packet,
 			       qiprog_packet_io_cb recv_packet,
+			       qiprog_poll_cb poll_in_token,
 			       uint16_t max_rx_packet, uint16_t max_tx_packet,
 			       uint8_t *bulk_buf)
 {
@@ -582,6 +584,7 @@ qiprog_err qiprog_usb_dev_init(qiprog_packet_io_cb send_packet,
 
 	if ((send_packet == NULL) ||
 	    (recv_packet == NULL) ||
+	    (poll_in_token == NULL) ||
 	    (max_rx_packet == 0) ||
 	    (max_tx_packet == 0) ||
 	    (bulk_buf == NULL))
@@ -589,6 +592,7 @@ qiprog_err qiprog_usb_dev_init(qiprog_packet_io_cb send_packet,
 
 	qi_read_packet = recv_packet;
 	qi_write_packet = send_packet;
+	qi_poll_in_token = poll_in_token;
 	qi_max_rx_packet = max_rx_packet;
 	qi_max_tx_packet = max_tx_packet;
 	qi_bulk_buf = bulk_buf;
@@ -642,6 +646,7 @@ static void handle_recv(void)
  */
 void qiprog_handle_events(void)
 {
+	static bool is_read_cycle = false;
 	uint32_t len, start, end;
 	struct qiprog_task *task;
 
@@ -657,8 +662,10 @@ void qiprog_handle_events(void)
 	 */
 	start = qi_dev->addr.pread;
 	end = qi_dev->addr.end;
-	if (start == end)
+	if (start == end) {
+		is_read_cycle = false;
 		return;
+	}
 	len = end - start + 1;
 
 	if (len == 0)
@@ -666,6 +673,13 @@ void qiprog_handle_events(void)
 
 	/* Get a free task */
 	if ((task = get_free_task()) == NULL)
+		return;
+
+	/* Start a read cycle on the first IN token */
+	if (!is_read_cycle && qi_poll_in_token())
+		is_read_cycle = true;
+
+	if (!is_read_cycle)
 		return;
 
 	task->len = MIN(len, qi_max_tx_packet);
